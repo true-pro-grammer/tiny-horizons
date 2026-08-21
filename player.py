@@ -34,13 +34,14 @@ class Player(pygame.sprite.Sprite):
     JUMP_PREPARE_TIME = 0.1
     LAND_TIME = 0.1
 
-    def __init__(self, pos, assets):
+    def __init__(self, pos, assets, logger):
         super().__init__()
 
         self.FRAME_LOGGING_DUMP = False
         self.FRAME_LOGGING_SMART = False
 
         self.assets = assets
+        self.logger = logger
 
         self.size = (96,96)
         self.velocity = pygame.Vector2(0,0)

@@ -4,11 +4,12 @@ from block import Block
 from chunk import Chunk
 
 class World:
-    def __init__(self, assets):
+    def __init__(self, assets, logger, block_size, chunk_size):
         self.assets = assets
+        self.logger = logger
 
-        self.BLOCK_SIZE = 64
-        self.CHUNK_SIZE = 16
+        self.BLOCK_SIZE = block_size
+        self.CHUNK_SIZE = chunk_size
         self.SEED = 12345
         self.RENDER_DISTANCE = 3
 
@@ -140,6 +141,7 @@ class World:
                     block_type = "stone"
 
                 self.add_block(grid_x, grid_y, block_type)
+        self.logger.info(f"Generated chunk at {chunk_pos} with {len(self.chunks[chunk_pos].blocks)} blocks")
 
     def terrain_height(self, x):
         import math

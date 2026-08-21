@@ -4,6 +4,7 @@ from enum import Enum, auto
 from game import Game
 from menu import StartMenu
 from utils import Event
+from logger import Logger
 
 class AppState(Enum):
     START = auto()
@@ -21,7 +22,8 @@ class App:
         self.state = AppState.START
 
         self.clock = pygame.time.Clock()
-        self.game = Game(self.screen, self.WIDTH, self.HEIGHT)
+        self.logger = Logger()
+        self.game = Game(self.screen, self.logger, self.WIDTH, self.HEIGHT)
         self.start_menu = StartMenu(self.screen, self.WIDTH, self.HEIGHT)
         self.running = True
 

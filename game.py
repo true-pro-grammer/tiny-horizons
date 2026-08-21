@@ -10,8 +10,9 @@ class Game:
     CHUNK_SIZE = 16
     FIXED_DT = 1/60
 
-    def __init__(self, screen, width, height):
+    def __init__(self, screen, logger, width, height):
         self.screen = screen
+        self.logger = logger
         self.width = width
         self.height = height
 
@@ -20,12 +21,12 @@ class Game:
         self.assets = Assets()
 
         self.player = pygame.sprite.GroupSingle()
-        self.player.add(Player((960, 540), self.assets))
+        self.player.add(Player((960, 540), self.assets, self.logger))
         self.player.sprite.teleport((0,0))
 
         self.camera = Camera(self.width, self.height)
 
-        self.world = World(self.assets)
+        self.world = World(self.assets, self.logger, self.BLOCK_SIZE, self.CHUNK_SIZE)
 
     def tick(self, dt, keys):
         keys = pygame.key.get_pressed()
