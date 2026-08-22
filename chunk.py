@@ -6,3 +6,4 @@ class Chunk:
         self.x = x
         self.y = y
         self.blocks = {}
+        self.modified = False

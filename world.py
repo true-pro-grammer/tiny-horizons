@@ -51,6 +51,7 @@ class World:
         block = Block((x, y), block_type, self.assets)
 
         chunk.blocks[(local_x,local_y)] = block
+        chunk.modified = True
 
     def fetch_surface_height(self, grid_x, mode="surface"):
         if mode == "surface":
@@ -106,6 +107,7 @@ class World:
 
     def draw(self, screen, camera):
         self.generate_around(pygame.Rect(camera.x, camera.y, camera.width, camera.height))
+        self.unload_far_chunks(camera)
 
         screen_rect = pygame.Rect(camera.x, camera.y, camera.width, camera.height)
 
@@ -187,3 +189,19 @@ class World:
                 player_chunk_y + self.RENDER_DISTANCE + 1
             ):
                 self.generate_chunk(chunk_x, chunk_y)
+
+    def unload_far_chunks(self, camera):
+        center_x = (camera.x + camera.width // 2) // self.BLOCK_SIZE
+        center_y = (camera.y + camera.height // 2) // self.BLOCK_SIZE
+
+        center_chunk_x = center_x // self.CHUNK_SIZE
+        center_chunk_y = center_y // self.CHUNK_SIZE
+
+        for chunk_pos in list(self.chunks):
+            chunk_x, chunk_y = chunk_pos
+
+            if (
+                abs(chunk_x - center_chunk_x) > self.RENDER_DISTANCE
+                or abs(chunk_y - center_chunk_y) > self.RENDER_DISTANCE
+            ) and not self.chunks[chunk_pos].modified:
+                del self.chunks[chunk_pos]
