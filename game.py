@@ -1,6 +1,5 @@
 import pygame
 
-from assets import Assets
 from player import Player
 from world import World
 from camera import Camera
@@ -10,7 +9,7 @@ class Game:
     CHUNK_SIZE = 16
     FIXED_DT = 1/60
 
-    def __init__(self, screen, logger, width, height):
+    def __init__(self, screen, logger, width, height, assets):
         self.screen = screen
         self.logger = logger
         self.width = width
@@ -18,15 +17,42 @@ class Game:
 
         self.accumulator = 0
 
-        self.assets = Assets()
+        self.assets = assets
 
-        self.player = pygame.sprite.GroupSingle()
-        self.player.add(Player((960, 540), self.assets, self.logger))
-        self.player.sprite.teleport((0,0))
+        self.vignette_img = assets.image("vignette")
+        self.vignette_default_img = assets.image("vignette_default")
+        self.VIGNETTE_INTENSITY = 0.5
 
         self.camera = Camera(self.width, self.height)
 
         self.world = World(self.assets, self.logger, self.BLOCK_SIZE, self.CHUNK_SIZE)
+
+        origin_chunks = {}
+        for y in range(-5,5):
+            if (0,y) in self.world.chunks.keys():
+                origin_chunks[(0,y)] = self.world.chunks[(0,y)]
+
+        self.player = pygame.sprite.GroupSingle()
+        self.player.add(Player((960, 540), self.assets, self.logger))
+        self.player.sprite.teleport((0, 100))
+
+    def draw_vignette(self):
+        width = int(self.width * self.VIGNETTE_INTENSITY)
+
+        scaled = pygame.transform.scale(
+            self.vignette_img,
+            (width, width)
+        )
+
+        x = (self.width - width) // 2
+        y = (self.height - width) // 2
+
+        mask = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        mask.fill((0, 0, 0, 255))
+        mask.fill((0, 0, 0, 0), scaled.get_rect(center=(self.width//2, self.height//2)))
+
+        self.screen.blit(scaled, (x, y))
+        self.screen.blit(mask, (0, 0))
 
     def tick(self, dt, keys):
         keys = pygame.key.get_pressed()
@@ -45,5 +71,10 @@ class Game:
         self.world.draw(self.screen, self.camera)
         
         self.screen.blit(self.player.sprite.image, (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y))
+
+        if self.VIGNETTE_INTENSITY == 1:
+            self.screen.blit(self.vignette_default_img, (0, 0))
+        else:
+            self.draw_vignette()
 
         return None

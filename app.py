@@ -5,6 +5,7 @@ from game import Game
 from menu import StartMenu
 from utils import Event
 from logger import Logger
+from assets import Assets
 
 class AppState(Enum):
     START = auto()
@@ -17,13 +18,14 @@ class App:
 
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
         pygame.display.set_caption(self.NAME)
         self.state = AppState.START
 
         self.clock = pygame.time.Clock()
         self.logger = Logger()
-        self.game = Game(self.screen, self.logger, self.WIDTH, self.HEIGHT)
+        self.assets = Assets()
+        self.game = Game(self.screen, self.logger, self.WIDTH, self.HEIGHT, self.assets)
         self.start_menu = StartMenu(self.screen, self.WIDTH, self.HEIGHT)
         self.running = True
 
@@ -45,7 +47,7 @@ class App:
         pygame.display.flip()
 
     def run(self):
-        try:
+        #try:
             while self.running:
                 events = pygame.event.get()
                 keys = pygame.key.get_pressed()
@@ -53,5 +55,5 @@ class App:
                     if event.type == pygame.QUIT:
                         self.running = False
                 self.tick(events, keys)
-        finally:
+        #finally:
             pygame.quit()

@@ -1,7 +1,9 @@
 import pygame
+from noise import pnoise1
 
 from block import Block
 from chunk import Chunk
+from utils import split_evenly
 
 class World:
     def __init__(self, assets, logger, block_size, chunk_size):
@@ -10,10 +12,24 @@ class World:
 
         self.BLOCK_SIZE = block_size
         self.CHUNK_SIZE = chunk_size
-        self.SEED = 12345
+        self.GOD_SEED = "99999"
+        self.SEEDLINGS = split_evenly(self.GOD_SEED, 1)
+        self.SEED = 1
+
         self.RENDER_DISTANCE = 3
 
+        self.BASE_HEIGHT = 0
+        self.HEIGHT_SCALE = 30
+        self.ROCK_HEIGHT = 5
+        self.ROCK_SCALE = 5
+        
+        self.SCALE = 0.008
+        self.OCTAVES = 4
+        self.PERSISTENCE = 0.5
+        self.LACUNARITY = 2.0
+
         self.chunks = {}
+        self.logger.info("Initialised world")
 
     def add_block(self, grid_x, grid_y, block_type):
         chunk_x = grid_x // self.CHUNK_SIZE
@@ -35,6 +51,13 @@ class World:
         block = Block((x, y), block_type, self.assets)
 
         chunk.blocks[(local_x,local_y)] = block
+
+    def fetch_surface_height(self, grid_x, mode="surface"):
+        if mode == "surface":
+            surface_y = int(self.BASE_HEIGHT + pnoise1(grid_x*self.SCALE,octaves=self.OCTAVES,persistence=self.PERSISTENCE,lacunarity=self.LACUNARITY,base=self.SEED) * self.HEIGHT_SCALE)
+        elif mode == "rock":
+            surface_y = int(self.ROCK_HEIGHT + pnoise1(grid_x*self.SCALE,octaves=self.OCTAVES,persistence=self.PERSISTENCE,lacunarity=self.LACUNARITY,base=self.SEED+1) * self.ROCK_SCALE)
+        return surface_y
 
     def delete_block(self, grid_x, grid_y):
         chunk_x = grid_x // self.CHUNK_SIZE
@@ -125,34 +148,28 @@ class World:
         end_y = start_y + self.CHUNK_SIZE
 
         for grid_x in range(start_x, end_x):
-            surface_y = self.terrain_height(grid_x)
+            surface_y = self.fetch_surface_height(grid_x)
+            rock_y = self.fetch_surface_height(grid_x, mode="rock")
 
-            for grid_y in range(start_y, end_y):
-                if grid_y < surface_y:
-                    continue
-
-                depth = grid_y - surface_y
-
-                if depth == 0:
-                    block_type = "grass"
-                elif depth <= 5:
+            for grid_y in range(surface_y, end_y):
+                if grid_y < rock_y:
                     block_type = "dirt"
                 else:
                     block_type = "stone"
 
-                self.add_block(grid_x, grid_y, block_type)
-        self.logger.info(f"Generated chunk at {chunk_pos} with {len(self.chunks[chunk_pos].blocks)} blocks")
+                local_x = grid_x % self.CHUNK_SIZE
+                local_y = grid_y % self.CHUNK_SIZE
 
-    def terrain_height(self, x):
-        import math
+                x = grid_x * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
+                y = grid_y * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
 
-        height = 0
+                block = Block(
+                    (x, y),
+                    block_type,
+                    self.assets
+                )
 
-        height += math.sin(x * 0.015) * 10
-        height += math.sin(x * 0.035) * 4
-        height += math.sin(x * 0.08) * 2
-
-        return int(height)
+                self.chunks[chunk_pos].blocks[(local_x, local_y)] = block
 
     def generate_around(self, rect):
         grid_x = int(rect.centerx // self.BLOCK_SIZE)

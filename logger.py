@@ -7,8 +7,30 @@ class Logger:
     def __init__(self):
         self.dir = Path("logs")
         self.dir.mkdir(parents=True, exist_ok=True)
-        self.log_file = self.dir / "log_current.txt"
-        self.log_file.write_text(f"[{self.timestamp()}] Initialised logger")
+
+        self.log_file = self.dir / "current.txt"
+        today = datetime.now().date()
+
+        if self.log_file.exists():
+            created_date = datetime.fromtimestamp(
+                self.log_file.stat().st_birthtime
+            ).date()
+
+            if created_date != today:
+                archived_file = self.dir / f"{created_date}.txt"
+
+                if archived_file.exists():
+                    archived_file = self.dir / (
+                        f"{created_date}_{datetime.now():%H-%M-%S}.txt"
+                    )
+
+                self.log_file.rename(archived_file)
+
+        if not self.log_file.exists():
+            self.log_file.write_text(
+                f"[{self.timestamp()}] Initialised logger",
+                encoding="utf-8",
+            )
 
     def timestamp(self):
         if self.VERBOSE:
@@ -25,3 +47,6 @@ class Logger:
 
     def error(self, message):
         self.log(f"ERROR: {message}")
+
+    def debug(self, message):
+        self.log(f"DEBUG: {message}")

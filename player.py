@@ -54,6 +54,7 @@ class Player(pygame.sprite.Sprite):
         self.state = MovementState.IDLE
         self.jump_state = None
         self.direction = Direction.STATIC
+        self.auto_jumping = False
 
         self.image = self.frames[self.state][0]
         self.rect = self.image.get_rect()
@@ -187,6 +188,7 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_w] and self.jump_state is None:
             self.state_timer = self.JUMP_PREPARE_TIME
             self.set_state(AerialState.PREPARING)
+            self.auto_jumping = True
 
     
     def physics_play(self, dt, blocks):
@@ -222,7 +224,11 @@ class Player(pygame.sprite.Sprite):
             self.state_timer -= dt
         
             if self.state_timer <= 0:
-                self.set_state(None)
+                if self.auto_jumping:
+                    self.state_timer = self.JUMP_PREPARE_TIME
+                    self.set_state(AerialState.PREPARING)
+                else:
+                    self.set_state(None)
         if self.velocity.y > 0:
             self.set_state(AerialState.FALLING)
 
