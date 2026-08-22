@@ -34,7 +34,7 @@ class App:
 
         match self.state:
             case AppState.PLAY:
-                report = self.game.tick(dt, keys)
+                report = self.game.tick(dt, keys, events)
             case AppState.START:
                 report = self.start_menu.tick(dt, events)
 
@@ -46,8 +46,14 @@ class App:
         
         pygame.display.flip()
 
+    def terminate(self, exception=None):
+        self.logger.info("Terminating application")
+        if exception:
+            self.logger.error(f"Exception: {exception}")
+        pygame.quit()
+
     def run(self):
-        #try:
+        try:
             while self.running:
                 events = pygame.event.get()
                 keys = pygame.key.get_pressed()
@@ -55,5 +61,5 @@ class App:
                     if event.type == pygame.QUIT:
                         self.running = False
                 self.tick(events, keys)
-        #finally:
-            pygame.quit()
+        finally:
+            self.terminate()

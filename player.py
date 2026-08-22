@@ -184,12 +184,11 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction = Direction.STATIC
             self.set_state(MovementState.IDLE)
-        
-        if keys[pygame.K_w] and self.jump_state is None:
+
+        self.auto_jumping = keys[pygame.K_w]
+        if self.auto_jumping and self.jump_state is None:
             self.state_timer = self.JUMP_PREPARE_TIME
             self.set_state(AerialState.PREPARING)
-            self.auto_jumping = True
-
     
     def physics_play(self, dt, blocks):
         acceleration = pygame.Vector2(0,self.GRAVITY)

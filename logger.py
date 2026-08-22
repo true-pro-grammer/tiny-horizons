@@ -25,12 +25,12 @@ class Logger:
                     )
 
                 self.log_file.rename(archived_file)
+            else:
+                self.log("Initialised logger")
 
         if not self.log_file.exists():
-            self.log_file.write_text(
-                f"[{self.timestamp()}] Initialised logger",
-                encoding="utf-8",
-            )
+            self.log("Created new log file")
+            self.log("Initialised logger")
 
     def timestamp(self):
         if self.VERBOSE:
@@ -40,7 +40,7 @@ class Logger:
 
     def log(self, message):
         with self.log_file.open("a") as f:
-            f.write(f"\n[{self.timestamp()}] {message}")
+            f.write(f"[{self.timestamp()}] {message}\n")
 
     def info(self, message):
         self.log(f"INFO: {message}")

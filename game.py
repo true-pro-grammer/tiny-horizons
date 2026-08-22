@@ -3,6 +3,7 @@ import pygame
 from player import Player
 from world import World
 from camera import Camera
+from utils import Event
 
 class Game:
     BLOCK_SIZE = 64
@@ -21,7 +22,7 @@ class Game:
 
         self.vignette_img = assets.image("vignette")
         self.vignette_default_img = assets.image("vignette_default")
-        self.VIGNETTE_INTENSITY = 0.5
+        self.VIGNETTE_INTENSITY = 1
 
         self.camera = Camera(self.width, self.height)
 
@@ -54,9 +55,23 @@ class Game:
         self.screen.blit(scaled, (x, y))
         self.screen.blit(mask, (0, 0))
 
-    def tick(self, dt, keys):
-        keys = pygame.key.get_pressed()
+    def inputs_in(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return Event.QUIT
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
+                if not self.player.sprite.rect.inflate(64,64).collidepoint(world_pos):
+                    match event.button:
+                        case 1:
+                            self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
+                        case 3:
+                            self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,"dirt")
+
+    def tick(self, dt, keys, events):
         self.player.sprite.inputs_in(keys)
+        self.inputs_in(events)
 
         self.accumulator += dt
         while self.accumulator >= self.FIXED_DT:
@@ -76,5 +91,10 @@ class Game:
             self.screen.blit(self.vignette_default_img, (0, 0))
         else:
             self.draw_vignette()
+
+        debug_rect = self.player.sprite.rect.inflate(76, 64)
+        debug_rect.x -= self.camera.x
+        debug_rect.y -= self.camera.y
+        pygame.draw.rect(self.screen, "red", debug_rect, 2)
 
         return None
