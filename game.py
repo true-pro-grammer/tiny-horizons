@@ -59,7 +59,7 @@ class Game:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return Event.QUIT
+                    return Event.QUIT_GAME
             if event.type == pygame.MOUSEBUTTONDOWN:
                 world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
                 if not self.player.sprite.rect.inflate(64,64).collidepoint(world_pos):
@@ -71,7 +71,7 @@ class Game:
 
     def tick(self, dt, keys, events):
         self.player.sprite.inputs_in(keys)
-        self.inputs_in(events)
+        inputs = self.inputs_in(events)
 
         self.accumulator += dt
         while self.accumulator >= self.FIXED_DT:
@@ -97,4 +97,4 @@ class Game:
         debug_rect.y -= self.camera.y
         pygame.draw.rect(self.screen, "red", debug_rect, 2)
 
-        return None
+        return inputs

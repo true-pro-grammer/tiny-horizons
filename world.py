@@ -75,6 +75,7 @@ class World:
         local_y = grid_y % self.CHUNK_SIZE
         
         chunk.blocks.pop((local_x,local_y),None)
+        chunk.modified = True
 
     def get_nearby_blocks(self, rect):
         blocks = []

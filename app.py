@@ -39,11 +39,12 @@ class App:
                 report = self.start_menu.tick(dt, events)
 
         match report:
-            case Event.QUIT:
-                self.running = False
+            case Event.QUIT_GAME:
+                self.state = AppState.START
             case Event.START_GAME:
                 self.state = AppState.PLAY
-        
+            case Event.TERMINATE:
+                self.running = False
         pygame.display.flip()
 
     def terminate(self, exception=None):

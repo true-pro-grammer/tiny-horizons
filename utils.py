@@ -1,8 +1,9 @@
-from enum import Enum, auto
+from enum import Flag, auto
 
-class Event(Enum):
+class Event(Flag):
     START_GAME = auto()
-    QUIT = auto()
+    QUIT_GAME = auto()
+    TERMINATE = auto()
 
 def split_evenly(s: str, parts: int) -> list[str]:
     if parts <= 0:
