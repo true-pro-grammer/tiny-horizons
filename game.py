@@ -10,8 +10,8 @@ class Game:
     CHUNK_SIZE = 16
     FIXED_DT = 1/60
 
-    def __init__(self, screen, logger, width, height, assets):
-        self.screen = screen
+    def __init__(self, renderer, logger, width, height, assets):
+        self.renderer = renderer
         self.logger = logger
         self.width = width
         self.height = height
@@ -54,8 +54,8 @@ class Game:
         mask.fill((0, 0, 0, 255))
         mask.fill((0, 0, 0, 0), scaled.get_rect(center=(self.width//2, self.height//2)))
 
-        self.screen.blit(scaled, (x, y))
-        self.screen.blit(mask, (0, 0))
+        self.renderer.draw_surface(scaled, (x, y))
+        self.renderer.draw_surface(mask, (0, 0))
 
     def inputs_in(self, events):
         for event in events:
@@ -83,21 +83,25 @@ class Game:
             self.accumulator -= self.FIXED_DT
         self.camera.update(self.player.sprite)
         
-        self.screen.fill("skyblue")
+        self.renderer.begin_frame()
         
-        self.world.draw(self.screen, self.camera)
+        self.world.draw(self.renderer, self.camera)
         
-        self.screen.blit(self.player.sprite.image, (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y))
+        self.renderer.draw_surface(
+            self.player.sprite.image,
+            (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y),
+        )
 
         #if self.VIGNETTE_INTENSITY == 1:
             #self.screen.blit(self.vignette_default_img, (0, 0))
         #else:
             #self.draw_vignette()
         #self.screen.blit(self.vignette_default_img, (0, 0))
+        self.renderer.draw_surface(self.vignette_default_img, (0, 0))
 
         debug_rect = self.player.sprite.rect.inflate(*self.MIN_REACH)
         debug_rect.x -= self.camera.x
         debug_rect.y -= self.camera.y
-        pygame.draw.rect(self.screen, "red", debug_rect, 2)
+        self.renderer.draw_rect(debug_rect, "red", 2, skeleton=True)
 
         return inputs

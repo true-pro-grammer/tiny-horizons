@@ -5,8 +5,8 @@ from utils import Event
 
 class StartMenu:
     
-    def __init__(self, screen, width, height):
-        self.screen = screen
+    def __init__(self, renderer, width, height):
+        self.renderer = renderer
         self.width = width
         self.height = height
     
@@ -23,10 +23,11 @@ class StartMenu:
     def tick(self, dt, events):
         report = self.check(events)
 
-        self.screen.fill("gray")
+        self.renderer.clear(1.0,0.0,0.0,1.0)
         mouse_pos = pygame.mouse.get_pos()
         current_colour = "orange" if self.button.collidepoint(mouse_pos) else "yellow"
-        pygame.draw.rect(self.screen, current_colour, self.button)
+        #pygame.draw.rect(self.screen, current_colour, self.button)
+        self.renderer.draw_rect(self.button, current_colour)
 
         return report
     

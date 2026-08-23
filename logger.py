@@ -53,6 +53,7 @@ class Logger:
         if self.VERBOSE:
             self.log(f"DEBUG: {message}")
 
-    def close(self):
+    def close(self, message=None):
         if not self.dmp.closed:
+            if message: self.log(f"Terminating logger with message: {message}")
             self.dmp.close()

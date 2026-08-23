@@ -10,6 +10,7 @@ class Chunk:
         self.y = y
         self.blocks = {}
         self.modified = False
+        self.texture_dirty = True
         self.image = pygame.Surface(
             (self.SIZE * self.BLOCK_SIZE, self.SIZE * self.BLOCK_SIZE)
         ).convert()
@@ -19,4 +20,5 @@ class Chunk:
 
         for (local_x, local_y), block in self.blocks.items():
             self.image.blit(block.image, (local_x * self.BLOCK_SIZE, local_y * self.BLOCK_SIZE))
+        self.texture_dirty = True
         self.logger.debug(f"Baked chunk at ({self.x}, {self.y}) with {len(self.blocks)} blocks")

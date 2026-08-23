@@ -108,9 +108,9 @@ class World:
 
         return blocks
 
-    def draw(self, screen, camera):
+    def draw(self, renderer, camera):
         self.generate_around(pygame.Rect(camera.x, camera.y, camera.width, camera.height))
-        self.unload_far_chunks(camera)
+        self.unload_far_chunks(camera, renderer)
 
         screen_rect = pygame.Rect(camera.x, camera.y, camera.width, camera.height)
 
@@ -133,7 +133,14 @@ class World:
 
                 if chunk is None or not chunk.blocks:
                     continue
-                screen.blit(chunk.image, (chunk.x * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.x, chunk.y * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.y))
+                if chunk.texture_dirty:
+                    renderer.invalidate_surface(chunk.image)
+                    chunk.texture_dirty = False
+                renderer.draw_surface(
+                    chunk.image,
+                    (chunk.x * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.x,
+                     chunk.y * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.y),
+                )
 
                 #for block in chunk.blocks.values():
                     #if block.rect.colliderect(screen_rect):
@@ -195,7 +202,7 @@ class World:
             ):
                 self.generate_chunk(chunk_x, chunk_y)
 
-    def unload_far_chunks(self, camera):
+    def unload_far_chunks(self, camera, renderer):
         center_x = (camera.x + camera.width // 2) // self.BLOCK_SIZE
         center_y = (camera.y + camera.height // 2) // self.BLOCK_SIZE
 
@@ -209,4 +216,5 @@ class World:
                 abs(chunk_x - center_chunk_x) > self.RENDER_DISTANCE
                 or abs(chunk_y - center_chunk_y) > self.RENDER_DISTANCE
             ) and not self.chunks[chunk_pos].modified:
+                renderer.invalidate_surface(self.chunks[chunk_pos].image)
                 del self.chunks[chunk_pos]
