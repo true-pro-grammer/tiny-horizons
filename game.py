@@ -21,7 +21,8 @@ class Game:
         self.assets = assets
 
         self.vignette_img = assets.image("vignette")
-        self.vignette_default_img = assets.image("vignette_default")
+        self.vignette_default_img = pygame.transform.smoothscale(assets.image("vignette_default"), (self.width, self.height)).convert_alpha()
+
         self.VIGNETTE_INTENSITY = 1
 
         self.camera = Camera(self.width, self.height)
@@ -87,10 +88,11 @@ class Game:
         
         self.screen.blit(self.player.sprite.image, (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y))
 
-        if self.VIGNETTE_INTENSITY == 1:
-            self.screen.blit(self.vignette_default_img, (0, 0))
-        else:
-            self.draw_vignette()
+        #if self.VIGNETTE_INTENSITY == 1:
+            #self.screen.blit(self.vignette_default_img, (0, 0))
+        #else:
+            #self.draw_vignette()
+        self.screen.blit(self.vignette_default_img, (0, 0))
 
         debug_rect = self.player.sprite.rect.inflate(76, 64)
         debug_rect.x -= self.camera.x

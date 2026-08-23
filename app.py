@@ -23,6 +23,7 @@ class App:
         self.state = AppState.START
 
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 30)
         self.logger = Logger()
         self.assets = Assets()
         self.game = Game(self.screen, self.logger, self.WIDTH, self.HEIGHT, self.assets)
@@ -30,7 +31,7 @@ class App:
         self.running = True
 
     def tick(self, events, keys):
-        dt = min(self.clock.tick(180)/1000,0.1)
+        dt = min(self.clock.tick()/1000,0.1)
 
         match self.state:
             case AppState.PLAY:
@@ -45,6 +46,9 @@ class App:
                 self.state = AppState.PLAY
             case Event.TERMINATE:
                 self.running = False
+
+        fps = self.font.render(f"FPS: {self.clock.get_fps():.1f}", True, "orange")
+        self.screen.blit(fps, (10, 10))
         pygame.display.flip()
 
     def terminate(self, exception=None):
