@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 
 class Logger:
-    VERBOSE = False
+    VERBOSE = True
 
     def __init__(self):
         self.dir = Path("logs")

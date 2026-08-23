@@ -54,7 +54,7 @@ class App:
     def terminate(self, exception=None):
         self.logger.info("Terminating application")
         if exception:
-            self.logger.error(f"Exception: {exception}")
+            self.logger.error(exception)
         self.logger.close()
         pygame.quit()
 

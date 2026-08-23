@@ -114,6 +114,9 @@ class Player(pygame.sprite.Sprite):
                 elif self.velocity.y < 0:
                     self.hitbox.top = block.rect.bottom
                     self.velocity.y = 0
+                    if self.jump_state is AerialState.RISING:
+                        self.state_timer = self.LAND_TIME
+                        self.set_state(AerialState.LANDING)
             
     
     def init_frames(self):
@@ -191,6 +194,24 @@ class Player(pygame.sprite.Sprite):
             self.set_state(AerialState.PREPARING)
     
     def physics_play(self, dt, blocks):
+        # Advance aerial states before movement so a newly started jump can
+        # collide with a low ceiling during this same physics step.
+        if self.jump_state is AerialState.PREPARING:
+            self.state_timer -= dt
+
+            if self.state_timer <= 0:
+                self.set_state(AerialState.RISING)
+                self.velocity.y = self.JUMP_POWER
+        elif self.jump_state is AerialState.LANDING:
+            self.state_timer -= dt
+
+            if self.state_timer <= 0:
+                if self.auto_jumping:
+                    self.state_timer = self.JUMP_PREPARE_TIME
+                    self.set_state(AerialState.PREPARING)
+                else:
+                    self.set_state(None)
+
         acceleration = pygame.Vector2(0,self.GRAVITY)
         if self.direction is Direction.LEFT: acceleration.x -= self.ACCELERATION_CONST
         elif self.direction is Direction.RIGHT: acceleration.x += self.ACCELERATION_CONST
@@ -212,22 +233,6 @@ class Player(pygame.sprite.Sprite):
         self.collider_x(blocks)
         self.hitbox.y += self.velocity.y * dt
         self.collider_y(blocks)
-
-        if self.jump_state is AerialState.PREPARING:
-            self.state_timer -= dt
-        
-            if self.state_timer <= 0:
-                self.set_state(AerialState.RISING)
-                self.velocity.y = self.JUMP_POWER
-        elif self.jump_state is AerialState.LANDING:
-            self.state_timer -= dt
-        
-            if self.state_timer <= 0:
-                if self.auto_jumping:
-                    self.state_timer = self.JUMP_PREPARE_TIME
-                    self.set_state(AerialState.PREPARING)
-                else:
-                    self.set_state(None)
         if self.velocity.y > 0:
             self.set_state(AerialState.FALLING)
 
@@ -259,3 +264,4 @@ class Player(pygame.sprite.Sprite):
             self.set_image(self.frames[self.state+self.direction][self.frame_i])
         
         self.rect.midbottom = self.hitbox.midbottom
+        self.logger.debug(f"Jump state: {self.jump_state}")
