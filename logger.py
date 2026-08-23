@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 
 class Logger:
-    VERBOSE = True
+    VERBOSE = False
 
     def __init__(self):
         self.dir = Path("logs")
@@ -25,12 +25,13 @@ class Logger:
                     )
 
                 self.log_file.rename(archived_file)
-            else:
-                self.log("Initialised logger")
 
-        if not self.log_file.exists():
+        self.dmp = self.log_file.open("a", encoding="utf-8")
+
+        if self.log_file.stat().st_size == 0:
             self.log("Created new log file")
-            self.log("Initialised logger")
+
+        self.log("Initialised logger")
 
     def timestamp(self):
         if self.VERBOSE:
@@ -39,8 +40,8 @@ class Logger:
             return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def log(self, message):
-        with self.log_file.open("a") as f:
-            f.write(f"[{self.timestamp()}] {message}\n")
+        self.dmp.write(f"[{self.timestamp()}] {message}\n")
+        self.dmp.flush()
 
     def info(self, message):
         self.log(f"INFO: {message}")
@@ -49,4 +50,9 @@ class Logger:
         self.log(f"ERROR: {message}")
 
     def debug(self, message):
-        self.log(f"DEBUG: {message}")
+        if self.VERBOSE:
+            self.log(f"DEBUG: {message}")
+
+    def close(self):
+        if not self.dmp.closed:
+            self.dmp.close()

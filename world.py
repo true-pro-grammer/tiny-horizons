@@ -16,7 +16,7 @@ class World:
         self.SEEDLINGS = split_evenly(self.GOD_SEED, 1)
         self.SEED = 1
 
-        self.RENDER_DISTANCE = 3
+        self.RENDER_DISTANCE = 1
 
         self.BASE_HEIGHT = 0
         self.HEIGHT_SCALE = 30
@@ -38,7 +38,7 @@ class World:
         chunk_pos = (chunk_x, chunk_y)
 
         if chunk_pos not in self.chunks:
-            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y)
+            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y, self.BLOCK_SIZE, self.logger)
 
         chunk = self.chunks[chunk_pos]
 
@@ -52,6 +52,7 @@ class World:
 
         chunk.blocks[(local_x,local_y)] = block
         chunk.modified = True
+        chunk.bake()
 
     def fetch_surface_height(self, grid_x, mode="surface"):
         if mode == "surface":
@@ -67,7 +68,7 @@ class World:
         chunk_pos = (chunk_x, chunk_y)
         
         if chunk_pos not in self.chunks:
-            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y)
+            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y, self.BLOCK_SIZE, self.logger)
         
         chunk = self.chunks[chunk_pos]
         
@@ -76,6 +77,7 @@ class World:
         
         chunk.blocks.pop((local_x,local_y),None)
         chunk.modified = True
+        chunk.bake()
 
     def get_nearby_blocks(self, rect):
         blocks = []
@@ -129,12 +131,13 @@ class World:
 
                 chunk = self.chunks.get((chunk_x, chunk_y))
 
-                if chunk is None:
+                if chunk is None or not chunk.blocks:
                     continue
+                screen.blit(chunk.image, (chunk.x * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.x, chunk.y * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.y))
 
-                for block in chunk.blocks.values():
-                    if block.rect.colliderect(screen_rect):
-                        screen.blit(block.image,(block.rect.x - camera.x,block.rect.y - camera.y))
+                #for block in chunk.blocks.values():
+                    #if block.rect.colliderect(screen_rect):
+                        #screen.blit(block.image,(block.rect.x - camera.x,block.rect.y - camera.y))
 
     def generate_chunk(self, chunk_x, chunk_y):
         chunk_pos = (chunk_x, chunk_y)
@@ -142,7 +145,7 @@ class World:
         if chunk_pos in self.chunks:
             return
 
-        self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y)
+        self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y, self.BLOCK_SIZE, self.logger)
 
         start_x = chunk_x * self.CHUNK_SIZE
         end_x = start_x + self.CHUNK_SIZE
@@ -173,6 +176,7 @@ class World:
                 )
 
                 self.chunks[chunk_pos].blocks[(local_x, local_y)] = block
+        self.chunks[chunk_pos].bake()
 
     def generate_around(self, rect):
         grid_x = int(rect.centerx // self.BLOCK_SIZE)

@@ -55,6 +55,7 @@ class App:
         self.logger.info("Terminating application")
         if exception:
             self.logger.error(f"Exception: {exception}")
+        self.logger.close()
         pygame.quit()
 
     def run(self):
@@ -66,5 +67,9 @@ class App:
                     if event.type == pygame.QUIT:
                         self.running = False
                 self.tick(events, keys)
+        except Exception as exception:
+            self.terminate(exception)
+            raise
         finally:
-            self.terminate()
+            if not self.logger.dmp.closed:
+                self.terminate()

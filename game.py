@@ -92,9 +92,9 @@ class Game:
             #self.screen.blit(self.vignette_default_img, (0, 0))
         #else:
             #self.draw_vignette()
-        self.screen.blit(self.vignette_default_img, (0, 0))
+        #self.screen.blit(self.vignette_default_img, (0, 0))
 
-        debug_rect = self.player.sprite.rect.inflate(76, 64)
+        debug_rect = self.player.sprite.hitbox.copy()
         debug_rect.x -= self.camera.x
         debug_rect.y -= self.camera.y
         pygame.draw.rect(self.screen, "red", debug_rect, 2)
