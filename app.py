@@ -18,7 +18,7 @@ class App:
 
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.FULLSCREEN, pygame.OPENGL | pygame.DOUBLEBUF)
         pygame.display.set_caption(self.NAME)
         self.state = AppState.START
 
