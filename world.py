@@ -45,14 +45,15 @@ class World:
         local_x = grid_x % self.CHUNK_SIZE
         local_y = grid_y % self.CHUNK_SIZE
 
-        x = grid_x * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
-        y = grid_y * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
+        if chunk.blocks.get((local_x, local_y)) is None:
+            x = grid_x * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
+            y = grid_y * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
 
-        block = Block((x, y), block_type, self.assets)
+            block = Block((x, y), block_type, self.assets)
 
-        chunk.blocks[(local_x,local_y)] = block
-        chunk.modified = True
-        chunk.bake()
+            chunk.blocks[(local_x,local_y)] = block
+            chunk.modified = True
+            chunk.bake()
 
     def fetch_surface_height(self, grid_x, mode="surface"):
         if mode == "surface":

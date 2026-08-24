@@ -25,6 +25,7 @@ class Game:
 
         self.VIGNETTE_INTENSITY = 1
         self.MIN_REACH = (64, 0)
+        self.MAX_REACH = (320, 256)
 
         self.camera = Camera(self.width, self.height)
 
@@ -64,12 +65,13 @@ class Game:
                     return Event.QUIT_GAME
             if event.type == pygame.MOUSEBUTTONDOWN:
                 world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
-                if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
+                if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(world_pos):
                     match event.button:
                         case 1:
                             self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
                         case 3:
-                            self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,"dirt")
+                            if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
+                                self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,"dirt")
 
     def tick(self, dt, keys, events):
         self.player.sprite.inputs_in(keys)
@@ -97,11 +99,15 @@ class Game:
         #else:
             #self.draw_vignette()
         #self.screen.blit(self.vignette_default_img, (0, 0))
-        self.renderer.draw_surface(self.vignette_default_img, (0, 0))
+        #self.renderer.draw_surface(self.vignette_default_img, (0, 0))
 
-        debug_rect = self.player.sprite.rect.inflate(*self.MIN_REACH)
+        debug_rect = self.player.sprite.rect.inflate(*self.MAX_REACH)
+        debug_2_rect = self.player.sprite.rect.inflate(*self.MIN_REACH)
         debug_rect.x -= self.camera.x
         debug_rect.y -= self.camera.y
+        debug_2_rect.x -= self.camera.x
+        debug_2_rect.y -= self.camera.y
         self.renderer.draw_rect(debug_rect, "red", 2, skeleton=True)
+        self.renderer.draw_rect(debug_2_rect, "red", 2, skeleton=True)
 
         return inputs
