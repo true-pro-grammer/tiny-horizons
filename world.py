@@ -45,7 +45,27 @@ class World:
         local_x = grid_x % self.CHUNK_SIZE
         local_y = grid_y % self.CHUNK_SIZE
 
-        if chunk.blocks.get((local_x, local_y)) is None:
+        neighbours = ((grid_x + 1, grid_y), (grid_x - 1, grid_y),
+                      (grid_x, grid_y + 1), (grid_x, grid_y - 1))
+        not_suspended = False
+        for neighbour_x, neighbour_y in neighbours:
+            neighbour_chunk_pos = (
+                neighbour_x // self.CHUNK_SIZE,
+                neighbour_y // self.CHUNK_SIZE,
+            )
+            neighbour_chunk = self.chunks.get(neighbour_chunk_pos)
+            if neighbour_chunk is None:
+                continue
+
+            neighbour_pos = (
+                neighbour_x % self.CHUNK_SIZE,
+                neighbour_y % self.CHUNK_SIZE,
+            )
+            if isinstance(neighbour_chunk.blocks.get(neighbour_pos), Block):
+                not_suspended = True
+                break
+        
+        if chunk.blocks.get((local_x, local_y)) is None and not_suspended:
             x = grid_x * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
             y = grid_y * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
 
