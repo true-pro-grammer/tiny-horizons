@@ -56,6 +56,8 @@ class Player(pygame.sprite.Sprite):
         self.direction = Direction.STATIC
         self.auto_jumping = False
 
+        self.diff = 0
+
         self.image = self.frames[self.state][0]
         self.rect = self.image.get_rect()
         self.rect.midbottom = pos
@@ -108,16 +110,31 @@ class Player(pygame.sprite.Sprite):
                 if self.velocity.y > 0:
                     self.hitbox.bottom = block.rect.top
                     self.velocity.y = 0
-                    if self.jump_state is AerialState.FALLING:
+                    if self.jump_state in (AerialState.RISING, AerialState.FALLING):
                         self.state_timer = self.LAND_TIME
                         self.set_state(AerialState.LANDING)
                 elif self.velocity.y < 0:
                     self.hitbox.top = block.rect.bottom
                     self.velocity.y = 0
-                    if self.jump_state is AerialState.RISING:
+                    if self.jump_state in (AerialState.PREPARING, AerialState.RISING):
                         self.state_timer = self.LAND_TIME
                         self.set_state(AerialState.LANDING)
-            
+
+    def test_collider_y(self, blocks):
+        for block in blocks:
+            if self.hitbox.colliderect(block.rect):
+                self.diff = self.hitbox.centery - block.rect.centery
+                if self.diff < 0:
+                    self.hitbox.bottom = block.rect.top
+                    self.velocity.y = 0
+                    if self.jump_state in (AerialState.FALLING,AerialState.RISING):
+                        self.state_timer = self.LAND_TIME
+                        self.set_state(AerialState.LANDING)
+                elif self.diff > 0:
+                    self.hitbox.top = block.rect.bottom
+                    self.velocity.y = 0
+                    if self.jump_state in (AerialState.PREPARING, AerialState.RISING):
+                        self.set_state(AerialState.FALLING)
     
     def init_frames(self):
         self.frames = {
@@ -194,13 +211,10 @@ class Player(pygame.sprite.Sprite):
             self.set_state(AerialState.PREPARING)
     
     def physics_play(self, dt, blocks):
-        # Advance aerial states before movement so a newly started jump can
-        # collide with a low ceiling during this same physics step.
         if self.jump_state is AerialState.PREPARING:
             self.state_timer -= dt
 
             if self.state_timer <= 0:
-                self.set_state(AerialState.RISING)
                 self.velocity.y = self.JUMP_POWER
         elif self.jump_state is AerialState.LANDING:
             self.state_timer -= dt
@@ -233,6 +247,8 @@ class Player(pygame.sprite.Sprite):
         self.collider_x(blocks)
         self.hitbox.y += self.velocity.y * dt
         self.collider_y(blocks)
+        if self.jump_state is AerialState.PREPARING and self.velocity.y < 0:
+            self.set_state(AerialState.RISING)
         if self.velocity.y > 0:
             self.set_state(AerialState.FALLING)
 

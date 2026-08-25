@@ -24,10 +24,12 @@ class Game:
         self.vignette_default_img = pygame.transform.smoothscale(assets.image("vignette_default"), (self.width, self.height)).convert_alpha()
 
         self.VIGNETTE_INTENSITY = 1
-        self.MIN_REACH = (64, 0)
+        self.MIN_REACH = (64, 40)
         self.MAX_REACH = (320, 256)
 
         self.camera = Camera(self.width, self.height)
+
+        self.font = pygame.font.Font(None, 30)
 
         self.world = World(self.assets, self.logger, self.BLOCK_SIZE, self.CHUNK_SIZE)
 
@@ -38,7 +40,7 @@ class Game:
 
         self.player = pygame.sprite.GroupSingle()
         self.player.add(Player((960, 540), self.assets, self.logger))
-        self.player.sprite.teleport((0, 100))
+        self.player.sprite.teleport((0, -50))
 
     def draw_vignette(self):
         width = int(self.width * self.VIGNETTE_INTENSITY)
@@ -109,5 +111,8 @@ class Game:
         debug_2_rect.y -= self.camera.y
         self.renderer.draw_rect(debug_rect, "red", 2, skeleton=True)
         self.renderer.draw_rect(debug_2_rect, "red", 2, skeleton=True)
+
+        txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
+        self.renderer.draw_surface(txt, (10,30))
 
         return inputs
