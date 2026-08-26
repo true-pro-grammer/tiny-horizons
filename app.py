@@ -10,6 +10,8 @@ from logger import Logger
 from assets import Assets
 from renderer import Renderer
 
+#MOUSE = (BUTTONS, POS)
+
 class AppState(Enum):
     START = auto()
     PLAY = auto()
@@ -46,7 +48,7 @@ class App:
         self.start_menu = StartMenu(self.renderer, self.WIDTH, self.HEIGHT)
         self.running = True
 
-    def tick(self, events, keys):
+    def tick(self, events, keys, mouse):
         frame_started_at = perf_counter()
         frame_dt = frame_started_at - self.last_frame_started_at
         self.last_frame_started_at = frame_started_at
@@ -57,7 +59,7 @@ class App:
 
         match self.state:
             case AppState.PLAY:
-                report = self.game.tick(dt, keys, events)
+                report = self.game.tick(dt, keys, mouse, events)
             case AppState.START:
                 report = self.start_menu.tick(dt, events)
 
@@ -108,10 +110,11 @@ class App:
             while self.running:
                 events = pygame.event.get()
                 keys = pygame.key.get_pressed()
+                mouse = (pygame.mouse.get_pressed(),pygame.mouse.get_pos())
                 for event in events:
                     if event.type == pygame.QUIT:
                         self.running = False
-                self.tick(events, keys)
+                self.tick(events, keys, mouse)
         except Exception as exception:
             self.terminate(exception)
             raise

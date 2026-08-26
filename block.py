@@ -9,6 +9,15 @@ class BlockType(IntEnum):
     LOG = 4
     LEAF = 5
 
+HARDNESS_LOOKUP = {
+    BlockType.GRASS: 1,
+    BlockType.DIRT: 1,
+    BlockType.STONE: 10,
+    BlockType.COAL: 15,
+    BlockType.LOG: 5,
+    BlockType.LEAF: 0.5,
+}
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, pos, id, assets):
         super().__init__()
@@ -17,6 +26,13 @@ class Block(pygame.sprite.Sprite):
         self.size = (64,64)
         self.image = assets.atlas_texture("blocks", id)
         self.rect = self.image.get_rect(center=self.pos)
+        self.hardness = HARDNESS_LOOKUP[id]
+
+        self.integrity = 1.0
+
+    def erode(self, dt):
+        self.integrity -= dt / self.hardness
+        return self.integrity <= 0
 
     def update(self):
         pass

@@ -28,6 +28,7 @@ class Game:
 
         self.accumulator = 0
         self.zonal_blocks = []
+        self.erode_target = None
 
         self.assets = assets
 
@@ -71,29 +72,40 @@ class Game:
         self.renderer.draw_surface(scaled, (x, y))
         self.renderer.draw_surface(mask, (0, 0))
 
-    def inputs_in(self, events):
+    def inputs_in(self, mouse, events):
+        self.erode_target = None
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return Event.QUIT_GAME
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
-                if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(world_pos):
-                    match event.button:
-                        case 1:
-                            self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
-                        case 3:
-                            if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
-                                self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
+            #if event.type == pygame.MOUSEBUTTONDOWN:
+                #world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
+                #if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(world_pos):
+                    #match event.button:
+                        #case 1:
+                            #self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
+                        #case 3:
+                            #if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
+                                #self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
+        if mouse[0][0] or mouse[0][2]:
+            world_pos = (mouse[1][0]+self.camera.x, mouse[1][1]+self.camera.y)
+            if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(world_pos):
+                if mouse[0][0]:
+                    self.erode_target = (world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
+                if mouse[0][2] and not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
+                    self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
 
-    def tick(self, dt, keys, events):
+    def tick(self, dt, keys, mouse, events):
         self.player.sprite.inputs_in(keys)
-        inputs = self.inputs_in(events)
+        inputs = self.inputs_in(mouse, events)
 
         self.accumulator += dt
         while self.accumulator >= self.FIXED_DT:
             self.zonal_blocks = self.world.get_nearby_blocks(self.player.sprite.hitbox)
             self.player.update(self.FIXED_DT, self.zonal_blocks)
+
+            if self.erode_target is not None:
+                self.world.erode_block(*self.erode_target, self.FIXED_DT)
         
             self.accumulator -= self.FIXED_DT
         self.camera.update(self.player.sprite)
