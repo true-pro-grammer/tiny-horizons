@@ -1,4 +1,13 @@
 import pygame
+from enum import IntEnum
+
+class BlockType(IntEnum):
+    GRASS = 0
+    DIRT = 1
+    STONE = 2
+    COAL = 3
+    LOG = 4
+    LEAF = 5
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, pos, id, assets):

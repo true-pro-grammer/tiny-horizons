@@ -1,7 +1,7 @@
 import pygame
 from noise import pnoise1
 
-from block import Block
+from block import Block, BlockType
 from chunk import Chunk
 from utils import split_evenly
 
@@ -187,9 +187,9 @@ class World:
 
             for grid_y in range(surface_y, end_y):
                 if grid_y < rock_y:
-                    block_type = "dirt"
+                    block_type = BlockType.DIRT
                 else:
-                    block_type = "stone"
+                    block_type = BlockType.STONE
 
                 local_x = grid_x % self.CHUNK_SIZE
                 local_y = grid_y % self.CHUNK_SIZE

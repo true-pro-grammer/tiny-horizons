@@ -5,6 +5,7 @@ from player import Player
 from world import World
 from camera import Camera
 from utils import Event
+from block import BlockType
 
 class DebugMode(Flag):
     SHOW_COORDS = auto()
@@ -23,7 +24,7 @@ class Game:
         self.logger = logger
         self.width = width
         self.height = height
-        self.debug = DebugMode(0)
+        self.debug = DebugMode.SHOW_PLACE_RESTRICTION
 
         self.accumulator = 0
         self.zonal_blocks = []
@@ -83,7 +84,7 @@ class Game:
                             self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
                         case 3:
                             if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
-                                self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,"dirt")
+                                self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
 
     def tick(self, dt, keys, events):
         self.player.sprite.inputs_in(keys)

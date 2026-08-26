@@ -2,14 +2,6 @@ import pygame
 
 class Assets:
     def __init__(self):
-        self.TEXTURE_LIST = [
-            "grass",
-            "dirt",
-            "stone",
-            "coal",
-            "log",
-            "leaf",
-        ]
         # Normal images
         self.images = {}
 
@@ -195,26 +187,26 @@ class Assets:
 
         atlas = self.atlases[atlas_name]
 
-        if texture_id not in self.TEXTURE_LIST:
-            raise KeyError(
-                f"Texture '{texture_id}' does not exist "
-                f"in atlas '{atlas_name}'."
-            )
+        #if texture_id not in self.TEXTURE_LIST:
+            #raise KeyError(
+                #f"Texture '{texture_id}' does not exist "
+                #f"in atlas '{atlas_name}'."
+            #)
 
         width, height = atlas.get_size()
 
         columns = width // tile_size
         rows = height // tile_size
 
-        index = self.TEXTURE_LIST.index(texture_id)
+        #index = self.TEXTURE_LIST.index(texture_id)
 
-        if index >= columns * rows:
+        if texture_id >= columns * rows:
             raise ValueError(
                 f"Texture '{texture_id}' is outside the atlas."
             )
 
-        tile_x = index % columns
-        tile_y = index // columns
+        tile_x = texture_id % columns
+        tile_y = texture_id // columns
 
         rect = pygame.Rect(
             tile_x * tile_size,
