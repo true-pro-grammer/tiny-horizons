@@ -9,6 +9,7 @@ class Game:
     BLOCK_SIZE = 64
     CHUNK_SIZE = 16
     FIXED_DT = 1/60
+    SHOW_COORDS = False
 
     def __init__(self, renderer, logger, width, height, assets):
         self.renderer = renderer
@@ -112,7 +113,8 @@ class Game:
         self.renderer.draw_rect(debug_rect, "red", 2, skeleton=True)
         self.renderer.draw_rect(debug_2_rect, "red", 2, skeleton=True)
 
-        txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
-        self.renderer.draw_surface(txt, (10,30))
+        if self.SHOW_COORDS:
+            txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
+            self.renderer.draw_surface(txt, (10,30))
 
         return inputs
