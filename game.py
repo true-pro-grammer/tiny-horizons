@@ -1,23 +1,32 @@
 import pygame
+from enum import Flag, auto
 
 from player import Player
 from world import World
 from camera import Camera
 from utils import Event
 
+class DebugMode(Flag):
+    SHOW_COORDS = auto()
+    SHOW_HITBOX_PLAYER = auto()
+    SHOW_HITBOX_NEARBY = auto()
+    SHOW_BOUNDING_BOX = auto()
+    SHOW_PLACE_RESTRICTION = auto()
+
 class Game:
     BLOCK_SIZE = 64
     CHUNK_SIZE = 16
     FIXED_DT = 1/60
-    SHOW_COORDS = False
 
     def __init__(self, renderer, logger, width, height, assets):
         self.renderer = renderer
         self.logger = logger
         self.width = width
         self.height = height
+        self.debug = DebugMode(0)
 
         self.accumulator = 0
+        self.zonal_blocks = []
 
         self.assets = assets
 
@@ -26,7 +35,7 @@ class Game:
 
         self.VIGNETTE_INTENSITY = 1
         self.MIN_REACH = (64, 40)
-        self.MAX_REACH = (320, 256)
+        self.MAX_REACH = (400, 256)
 
         self.camera = Camera(self.width, self.height)
 
@@ -82,8 +91,8 @@ class Game:
 
         self.accumulator += dt
         while self.accumulator >= self.FIXED_DT:
-            zonal_blocks = self.world.get_nearby_blocks(self.player.sprite.hitbox)
-            self.player.update(self.FIXED_DT, zonal_blocks)
+            self.zonal_blocks = self.world.get_nearby_blocks(self.player.sprite.hitbox)
+            self.player.update(self.FIXED_DT, self.zonal_blocks)
         
             self.accumulator -= self.FIXED_DT
         self.camera.update(self.player.sprite)
@@ -104,17 +113,23 @@ class Game:
         #self.screen.blit(self.vignette_default_img, (0, 0))
         #self.renderer.draw_surface(self.vignette_default_img, (0, 0))
 
-        debug_rect = self.player.sprite.rect.inflate(*self.MAX_REACH)
-        debug_2_rect = self.player.sprite.rect.inflate(*self.MIN_REACH)
-        debug_rect.x -= self.camera.x
-        debug_rect.y -= self.camera.y
-        debug_2_rect.x -= self.camera.x
-        debug_2_rect.y -= self.camera.y
-        self.renderer.draw_rect(debug_rect, "red", 2, skeleton=True)
-        self.renderer.draw_rect(debug_2_rect, "red", 2, skeleton=True)
-
-        if self.SHOW_COORDS:
+        if DebugMode.SHOW_COORDS in self.debug:
             txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
             self.renderer.draw_surface(txt, (10,30))
+        if DebugMode.SHOW_HITBOX_PLAYER in self.debug:
+            hitbox = self.player.sprite.hitbox.move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(hitbox, "red", 2, skeleton=True)
+        if DebugMode.SHOW_HITBOX_NEARBY in self.debug:
+            for block in self.zonal_blocks:
+                wireframe = block.rect.move(-self.camera.x, -self.camera.y)
+                self.renderer.draw_rect(wireframe, "pink", 2, skeleton=True)
+        if DebugMode.SHOW_BOUNDING_BOX in self.debug:
+            rect = self.player.sprite.rect.move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(rect, "orange", 2, skeleton=True)
+        if DebugMode.SHOW_PLACE_RESTRICTION in self.debug:
+            outer = self.player.sprite.rect.inflate(*self.MAX_REACH).move(-self.camera.x, -self.camera.y)
+            inner = self.player.sprite.rect.inflate(*self.MIN_REACH).move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(outer, "purple", 2, skeleton=True)
+            self.renderer.draw_rect(inner, "purple", 2, skeleton=True)
 
         return inputs
