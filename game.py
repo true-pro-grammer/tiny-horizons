@@ -6,6 +6,7 @@ from world import World
 from camera import Camera
 from utils import Event
 from block import BlockType
+from ui import Hotbar
 
 class DebugMode(Flag):
     SHOW_COORDS = auto()
@@ -42,6 +43,7 @@ class Game:
         self.MAX_REACH = (400, 256)
 
         self.camera = Camera(self.width, self.height)
+        self.hotbar = Hotbar(self.renderer, self.width, self.height, self.assets)
 
         self.font = pygame.font.Font(None, 30)
 
@@ -158,6 +160,8 @@ class Game:
             (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y),
         )
 
+        #self.hotbar.draw(self.selected_block)
         self.handle_addons()
+        
 
         return inputs

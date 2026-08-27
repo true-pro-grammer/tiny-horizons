@@ -2,3 +2,5 @@ oldmain.py
 __pycache__/
 .vscode/
 logs/
+media/atlases/block_components.png
+generate_cube.py
