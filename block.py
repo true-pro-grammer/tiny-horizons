@@ -18,6 +18,15 @@ HARDNESS_LOOKUP = {
     BlockType.LEAF: 0.5,
 }
 
+class BreakState(IntEnum):
+    INTACT = -1
+    BROKEN_0 = 0
+    BROKEN_1 = 1
+    BROKEN_2 = 2
+    BROKEN_3 = 3
+    BROKEN_4 = 4
+    DESTROYED = 5
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, pos, id, assets):
         super().__init__()
@@ -34,16 +43,13 @@ class Block(pygame.sprite.Sprite):
         self.integrity -= dt / self.hardness
         if self.integrity <= 1e-9:
             self.integrity = 0
-            return -1
+            return BreakState.DESTROYED
         if self.integrity == 1:
-            return 5
+            return BreakState.INTACT
         return 4 - int(self.integrity / 0.2)
 
     def reset_integrity(self):
         self.integrity = 1.0
-
-    def fetch_overlay(self):
-        return self.integrity * 5 - 1
 
     def update(self):
         pass

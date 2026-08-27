@@ -1,7 +1,7 @@
 import pygame
 from noise import pnoise1
 
-from block import Block, BlockType
+from block import Block, BlockType, BreakState
 from chunk import Chunk
 from utils import split_evenly
 
@@ -116,10 +116,12 @@ class World:
             return
 
         state = block.erode(dt)
-        if state == -1:
+        if state == BreakState.DESTROYED:
             chunk.blocks.pop((local_x, local_y))
             chunk.modified = True
             chunk.bake()
+            return
+        elif state == BreakState.INTACT:
             return
         return state
 
