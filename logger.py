@@ -1,28 +1,34 @@
 from pathlib import Path
 from datetime import datetime
+import re
+
 
 class Logger:
     VERBOSE = False
 
+    @staticmethod
+    def _last_log_date(log_file):
+        for line in reversed(log_file.read_text(encoding="utf-8").splitlines()):
+            match = re.match(r"^\[([^]]+)\]", line)
+            if match:
+                return datetime.fromisoformat(match.group(1)).date()
+        return None
+
     def __init__(self):
-        self.dir = Path("logs")
+        self.dir = Path(__file__).resolve().parent / "logs"
         self.dir.mkdir(parents=True, exist_ok=True)
 
         self.log_file = self.dir / "current.txt"
         today = datetime.now().date()
 
         if self.log_file.exists():
-            created_date = datetime.fromtimestamp(
-                self.log_file.stat().st_birthtime
-            ).date()
+            created_date = self._last_log_date(self.log_file)
 
-            if created_date != today:
+            if created_date is not None and created_date != today:
                 archived_file = self.dir / f"{created_date}.txt"
 
                 if archived_file.exists():
-                    archived_file = self.dir / (
-                        f"{created_date}_{datetime.now():%H-%M-%S}.txt"
-                    )
+                    archived_file = self.dir / f"{created_date}_{datetime.now():%H-%M-%S-%f}.txt"
 
                 self.log_file.rename(archived_file)
 
