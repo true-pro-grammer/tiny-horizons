@@ -38,7 +38,6 @@ class Game:
         self.vignette_default_img = pygame.transform.smoothscale(assets.image("vignette_default"), (self.width, self.height)).convert_alpha()
 
         self.VIGNETTE_INTENSITY = 1
-        self.MIN_REACH = (64, 40)
         self.MAX_REACH = (400, 256)
 
         self.camera = Camera(self.width, self.height)
@@ -81,8 +80,17 @@ class Game:
             if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(self.world_pos):
                 if mouse[0][0]:
                     self.erode_target = (self.world_pos[0]//self.BLOCK_SIZE,self.world_pos[1]//self.BLOCK_SIZE)
-                if mouse[0][2] and not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(self.world_pos):
-                    self.world.add_block(self.world_pos[0]//self.BLOCK_SIZE,self.world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
+                if mouse[0][2]:
+                    grid_x = self.world_pos[0]//self.BLOCK_SIZE
+                    grid_y = self.world_pos[1]//self.BLOCK_SIZE
+                    block_rect = pygame.Rect(
+                        grid_x * self.BLOCK_SIZE,
+                        grid_y * self.BLOCK_SIZE,
+                        self.BLOCK_SIZE,
+                        self.BLOCK_SIZE,
+                    )
+                    if not block_rect.colliderect(self.player.sprite.hitbox):
+                        self.world.add_block(grid_x, grid_y, BlockType.LEAF)
 
         if self.erode_target != previous_target:
             self.block_break_overlay = None
@@ -107,9 +115,10 @@ class Game:
             self.renderer.draw_rect(rect, "orange", 2, skeleton=True)
         if DebugMode.SHOW_PLACE_RESTRICTION in self.debug:
             outer = self.player.sprite.rect.inflate(*self.MAX_REACH).move(-self.camera.x, -self.camera.y)
-            inner = self.player.sprite.rect.inflate(*self.MIN_REACH).move(-self.camera.x, -self.camera.y)
             self.renderer.draw_rect(outer, "purple", 2, skeleton=True)
-            self.renderer.draw_rect(inner, "purple", 2, skeleton=True)
+            if not DebugMode.SHOW_HITBOX_PLAYER in self.debug:
+                hitbox = self.player.sprite.hitbox.move(-self.camera.x, -self.camera.y)
+                self.renderer.draw_rect(hitbox, "purple", 2, skeleton=True)
 
     def tick(self, dt, keys, mouse, events):
         self.player.sprite.inputs_in(keys)
