@@ -28,14 +28,14 @@ class BreakState(IntEnum):
     DESTROYED = 5
 
 class Block(pygame.sprite.Sprite):
-    def __init__(self, pos, id, assets):
+    def __init__(self, pos, block_id, assets, block_size=64):
         super().__init__()
 
         self.pos = pygame.Vector2(pos)
-        self.size = (64,64)
-        self.image = assets.atlas_texture("blocks", id)
+        self.size = (block_size, block_size)
+        self.image = assets.atlas_texture("blocks", block_id)
         self.rect = self.image.get_rect(center=self.pos)
-        self.hardness = HARDNESS_LOOKUP[id]
+        self.hardness = HARDNESS_LOOKUP[block_id]
 
         self.integrity = 1.0
 
@@ -44,8 +44,6 @@ class Block(pygame.sprite.Sprite):
         if self.integrity <= 1e-9:
             self.integrity = 0
             return BreakState.DESTROYED
-        if self.integrity == 1:
-            return BreakState.INTACT
         return 4 - int(self.integrity / 0.2)
 
     def reset_integrity(self):

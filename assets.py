@@ -187,18 +187,11 @@ class Assets:
 
         atlas = self.atlases[atlas_name]
 
-        #if texture_id not in self.TEXTURE_LIST:
-            #raise KeyError(
-                #f"Texture '{texture_id}' does not exist "
-                #f"in atlas '{atlas_name}'."
-            #)
-
         width, height = atlas.get_size()
 
         columns = width // tile_size
         rows = height // tile_size
 
-        #index = self.TEXTURE_LIST.index(texture_id)
 
         if texture_id >= columns * rows:
             raise ValueError(

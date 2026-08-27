@@ -34,7 +34,6 @@ class App:
         pygame.display.set_caption(self.NAME)
         self.state = AppState.START
 
-        self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 30)
         self.last_frame_started_at = perf_counter()
         self.frame_times = deque(maxlen=120)
@@ -45,7 +44,7 @@ class App:
         self.logger = Logger()
         self.assets = Assets()
         self.game = Game(self.renderer, self.logger, self.WIDTH, self.HEIGHT, self.assets)
-        self.start_menu = StartMenu(self.renderer, self.WIDTH, self.HEIGHT)
+        self.start_menu = StartMenu(self.renderer, self.WIDTH, self.HEIGHT, self.assets)
         self.running = True
 
     def tick(self, events, keys, mouse):

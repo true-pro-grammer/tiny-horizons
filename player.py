@@ -64,10 +64,6 @@ class Player(pygame.sprite.Sprite):
 
         self.hitbox = pygame.Rect(0,0,48,64)
         self.hitbox.midbottom = self.rect.midbottom
-    
-    def reset_anims(self):
-        self.frame_i = 0
-        self.anim_timer = 0
 
     def set_state(self, state):
         if isinstance(state, MovementState):
@@ -119,22 +115,6 @@ class Player(pygame.sprite.Sprite):
                     if self.jump_state in (AerialState.PREPARING, AerialState.RISING):
                         self.state_timer = self.LAND_TIME
                         self.set_state(AerialState.LANDING)
-
-    def test_collider_y(self, blocks):
-        for block in blocks:
-            if self.hitbox.colliderect(block.rect):
-                self.diff = self.hitbox.centery - block.rect.centery
-                if self.diff < 0:
-                    self.hitbox.bottom = block.rect.top
-                    self.velocity.y = 0
-                    if self.jump_state in (AerialState.FALLING,AerialState.RISING):
-                        self.state_timer = self.LAND_TIME
-                        self.set_state(AerialState.LANDING)
-                elif self.diff > 0:
-                    self.hitbox.top = block.rect.bottom
-                    self.velocity.y = 0
-                    if self.jump_state in (AerialState.PREPARING, AerialState.RISING):
-                        self.set_state(AerialState.FALLING)
     
     def init_frames(self):
         self.frames = {
@@ -280,4 +260,3 @@ class Player(pygame.sprite.Sprite):
             self.set_image(self.frames[self.state+self.direction][self.frame_i])
         
         self.rect.midbottom = self.hitbox.midbottom
-        self.logger.debug(f"Jump state: {self.jump_state}")

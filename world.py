@@ -121,7 +121,7 @@ class World:
             chunk.modified = True
             chunk.bake()
             return
-        elif state == BreakState.INTACT:
+        if state == BreakState.INTACT:
             return
         return state
 

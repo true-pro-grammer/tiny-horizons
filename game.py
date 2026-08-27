@@ -13,6 +13,7 @@ class DebugMode(Flag):
     SHOW_HITBOX_NEARBY = auto()
     SHOW_BOUNDING_BOX = auto()
     SHOW_PLACE_RESTRICTION = auto()
+    HIDE_VIGNETTE = auto()
 
 class Game:
     BLOCK_SIZE = 64
@@ -24,7 +25,7 @@ class Game:
         self.logger = logger
         self.width = width
         self.height = height
-        self.debug = DebugMode.SHOW_PLACE_RESTRICTION
+        self.debug = DebugMode.HIDE_VIGNETTE
 
         self.accumulator = 0
         self.zonal_blocks = []
@@ -45,11 +46,6 @@ class Game:
         self.font = pygame.font.Font(None, 30)
 
         self.world = World(self.assets, self.logger, self.BLOCK_SIZE, self.CHUNK_SIZE)
-
-        origin_chunks = {}
-        for y in range(-5,5):
-            if (0,y) in self.world.chunks.keys():
-                origin_chunks[(0,y)] = self.world.chunks[(0,y)]
 
         self.player = pygame.sprite.GroupSingle()
         self.player.add(Player((960, 540), self.assets, self.logger))
@@ -80,15 +76,6 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return Event.QUIT_GAME
-            #if event.type == pygame.MOUSEBUTTONDOWN:
-                #world_pos = (event.pos[0]+self.camera.x, event.pos[1]+self.camera.y)
-                #if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(world_pos):
-                    #match event.button:
-                        #case 1:
-                            #self.world.delete_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE)
-                        #case 3:
-                            #if not self.player.sprite.rect.inflate(*self.MIN_REACH).collidepoint(world_pos):
-                                #self.world.add_block(world_pos[0]//self.BLOCK_SIZE,world_pos[1]//self.BLOCK_SIZE,BlockType.LEAF)
         if mouse[0][0] or mouse[0][2]:
             self.world_pos = (mouse[1][0]+self.camera.x, mouse[1][1]+self.camera.y)
             if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(self.world_pos):
@@ -101,6 +88,28 @@ class Game:
             self.block_break_overlay = None
             if previous_target is not None:
                 self.world.reset_block_integrity(*previous_target)
+
+    def handle_addons(self):
+        if not DebugMode.HIDE_VIGNETTE in self.debug:
+            self.renderer.draw_surface(self.vignette_default_img, (0, 0))
+        if DebugMode.SHOW_COORDS in self.debug:
+            txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
+            self.renderer.draw_surface(txt, (10,30))
+        if DebugMode.SHOW_HITBOX_PLAYER in self.debug:
+            hitbox = self.player.sprite.hitbox.move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(hitbox, "red", 2, skeleton=True)
+        if DebugMode.SHOW_HITBOX_NEARBY in self.debug:
+            for block in self.zonal_blocks:
+                wireframe = block.rect.move(-self.camera.x, -self.camera.y)
+                self.renderer.draw_rect(wireframe, "pink", 2, skeleton=True)
+        if DebugMode.SHOW_BOUNDING_BOX in self.debug:
+            rect = self.player.sprite.rect.move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(rect, "orange", 2, skeleton=True)
+        if DebugMode.SHOW_PLACE_RESTRICTION in self.debug:
+            outer = self.player.sprite.rect.inflate(*self.MAX_REACH).move(-self.camera.x, -self.camera.y)
+            inner = self.player.sprite.rect.inflate(*self.MIN_REACH).move(-self.camera.x, -self.camera.y)
+            self.renderer.draw_rect(outer, "purple", 2, skeleton=True)
+            self.renderer.draw_rect(inner, "purple", 2, skeleton=True)
 
     def tick(self, dt, keys, mouse, events):
         self.player.sprite.inputs_in(keys)
@@ -132,30 +141,6 @@ class Game:
             (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y),
         )
 
-        #if self.VIGNETTE_INTENSITY == 1:
-            #self.screen.blit(self.vignette_default_img, (0, 0))
-        #else:
-            #self.draw_vignette()
-        #self.screen.blit(self.vignette_default_img, (0, 0))
-        #self.renderer.draw_surface(self.vignette_default_img, (0, 0))
-
-        if DebugMode.SHOW_COORDS in self.debug:
-            txt = self.font.render(f"x:{self.player.sprite.hitbox.centerx} y:{self.player.sprite.hitbox.bottom}", True, "red")
-            self.renderer.draw_surface(txt, (10,30))
-        if DebugMode.SHOW_HITBOX_PLAYER in self.debug:
-            hitbox = self.player.sprite.hitbox.move(-self.camera.x, -self.camera.y)
-            self.renderer.draw_rect(hitbox, "red", 2, skeleton=True)
-        if DebugMode.SHOW_HITBOX_NEARBY in self.debug:
-            for block in self.zonal_blocks:
-                wireframe = block.rect.move(-self.camera.x, -self.camera.y)
-                self.renderer.draw_rect(wireframe, "pink", 2, skeleton=True)
-        if DebugMode.SHOW_BOUNDING_BOX in self.debug:
-            rect = self.player.sprite.rect.move(-self.camera.x, -self.camera.y)
-            self.renderer.draw_rect(rect, "orange", 2, skeleton=True)
-        if DebugMode.SHOW_PLACE_RESTRICTION in self.debug:
-            outer = self.player.sprite.rect.inflate(*self.MAX_REACH).move(-self.camera.x, -self.camera.y)
-            inner = self.player.sprite.rect.inflate(*self.MIN_REACH).move(-self.camera.x, -self.camera.y)
-            self.renderer.draw_rect(outer, "purple", 2, skeleton=True)
-            self.renderer.draw_rect(inner, "purple", 2, skeleton=True)
+        self.handle_addons()
 
         return inputs
