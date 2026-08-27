@@ -31,6 +31,7 @@ class Renderer:
         # Keep the source surface alongside its texture. This prevents Python
         # from reusing a destroyed surface's id for a different texture.
         self._textures = {}
+        self._texture_enabled = False
 
         self.resize(width, height)
         glEnable(GL_BLEND)
@@ -99,7 +100,9 @@ class Renderer:
             width, height = surface.get_size()
 
         texture = self.texture_for(surface) if cache else self._upload_surface(surface)
-        glEnable(GL_TEXTURE_2D)
+        if not self._texture_enabled:
+            glEnable(GL_TEXTURE_2D)
+            self._texture_enabled = True
         glBindTexture(GL_TEXTURE_2D, texture)
         glColor4f(1, 1, 1, 1)
         glBegin(GL_QUADS)
@@ -112,12 +115,14 @@ class Renderer:
         glTexCoord2f(0, 0)
         glVertex2f(x, y + height)
         glEnd()
-        glDisable(GL_TEXTURE_2D)
         if not cache:
             glDeleteTextures([texture])
 
     def draw_rect(self, rect, color, width=1, skeleton=False):
         """Draw an unfilled debug rectangle using Pygame-style coordinates."""
+        if self._texture_enabled:
+            glDisable(GL_TEXTURE_2D)
+            self._texture_enabled = False
         red, green, blue, *alpha = pygame.Color(color)
         opacity = alpha[0] if alpha else 255
         glColor4f(red / 255, green / 255, blue / 255, opacity / 255)

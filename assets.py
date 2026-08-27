@@ -16,6 +16,7 @@ class Assets:
 
         # Spritesheets
         self.sheets = {}
+        self.source_sheets = {}
 
         # Atlas files
         self.atlases = {}
@@ -118,7 +119,9 @@ class Assets:
         if key in self.sheets:
             return self.sheets[key]
 
-        sheet = pygame.image.load(path).convert_alpha()
+        if name not in self.source_sheets:
+            self.source_sheets[name] = pygame.image.load(path).convert_alpha()
+        sheet = self.source_sheets[name]
 
         frame_width, frame_height = frame_size
 
@@ -232,5 +235,6 @@ class Assets:
         self.sounds.clear()
         self.fonts.clear()
         self.sheets.clear()
+        self.source_sheets.clear()
         self.atlases.clear()
         self.atlas_textures.clear()

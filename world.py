@@ -1,4 +1,5 @@
 import pygame
+from collections import deque
 from noise import pnoise1
 
 from block import Block, BlockType, BreakState
@@ -29,6 +30,10 @@ class World:
         self.LACUNARITY = 2.0
 
         self.chunks = {}
+        self.chunk_queue = deque()
+        self.queued_chunks = set()
+        self._blocks_revision = 0
+        self._nearby_blocks_cache = None
         self.logger.info("Initialised world")
 
     def _grid_to_chunk(self, grid_x, grid_y):
@@ -87,6 +92,7 @@ class World:
             chunk.blocks[local_pos] = block
             chunk.modified = True
             chunk.bake()
+            self._blocks_revision += 1
 
     def fetch_surface_height(self, grid_x, mode="surface"):
         if mode == "surface":
@@ -97,9 +103,10 @@ class World:
 
     def delete_block(self, grid_x, grid_y):
         chunk, local_pos = self._get_or_create_chunk_at(grid_x, grid_y)
-        chunk.blocks.pop(local_pos, None)
-        chunk.modified = True
-        chunk.bake()
+        if chunk.blocks.pop(local_pos, None) is not None:
+            chunk.modified = True
+            chunk.bake()
+            self._blocks_revision += 1
 
     def erode_block(self, grid_x, grid_y, dt):
         chunk, local_pos = self._get_chunk_at(grid_x, grid_y)
@@ -116,6 +123,7 @@ class World:
             chunk.blocks.pop(local_pos)
             chunk.modified = True
             chunk.bake()
+            self._blocks_revision += 1
             return
         if state == BreakState.INTACT:
             return
@@ -128,12 +136,19 @@ class World:
             block.reset_integrity()
 
     def get_nearby_blocks(self, rect):
+        cache_key = (
+            (rect.left - self.BLOCK_SIZE) // self.BLOCK_SIZE,
+            (rect.right + self.BLOCK_SIZE) // self.BLOCK_SIZE,
+            (rect.top - self.BLOCK_SIZE) // self.BLOCK_SIZE,
+            (rect.bottom + self.BLOCK_SIZE) // self.BLOCK_SIZE,
+            self._blocks_revision,
+        )
+        if self._nearby_blocks_cache is not None and self._nearby_blocks_cache[0] == cache_key:
+            return self._nearby_blocks_cache[1]
+
         blocks = []
 
-        left = (rect.left - self.BLOCK_SIZE) // self.BLOCK_SIZE
-        right = (rect.right + self.BLOCK_SIZE) // self.BLOCK_SIZE
-        top = (rect.top - self.BLOCK_SIZE) // self.BLOCK_SIZE
-        bottom = (rect.bottom + self.BLOCK_SIZE) // self.BLOCK_SIZE
+        left, right, top, bottom, _ = cache_key
 
         for grid_y in range(top, bottom + 1):
             for grid_x in range(left, right + 1):
@@ -147,10 +162,12 @@ class World:
                 if block is not None:
                     blocks.append(block)
 
+        self._nearby_blocks_cache = (cache_key, blocks)
         return blocks
 
     def draw(self, renderer, camera):
         self.generate_around(pygame.Rect(camera.x, camera.y, camera.width, camera.height))
+        self.load_next_chunk()
         self.unload_far_chunks(camera, renderer)
 
         left = int(camera.x // self.BLOCK_SIZE)
@@ -219,6 +236,7 @@ class World:
 
                 self.chunks[chunk_pos].blocks[(local_x, local_y)] = block
         self.chunks[chunk_pos].bake()
+        self._blocks_revision += 1
 
     def generate_around(self, rect):
         grid_x = int(rect.centerx // self.BLOCK_SIZE)
@@ -235,7 +253,18 @@ class World:
                 player_chunk_y - self.RENDER_DISTANCE,
                 player_chunk_y + self.RENDER_DISTANCE + 1
             ):
-                self.generate_chunk(chunk_x, chunk_y)
+                chunk_pos = (chunk_x, chunk_y)
+                if chunk_pos not in self.chunks and chunk_pos not in self.queued_chunks:
+                    self.chunk_queue.append(chunk_pos)
+                    self.queued_chunks.add(chunk_pos)
+
+    def load_next_chunk(self):
+        while self.chunk_queue:
+            chunk_pos = self.chunk_queue.popleft()
+            self.queued_chunks.discard(chunk_pos)
+            if chunk_pos not in self.chunks:
+                self.generate_chunk(*chunk_pos)
+            return
 
     def unload_far_chunks(self, camera, renderer):
         center_x = (camera.x + camera.width // 2) // self.BLOCK_SIZE
