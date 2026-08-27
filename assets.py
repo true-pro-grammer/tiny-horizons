@@ -1,7 +1,10 @@
 import pygame
+from pathlib import Path
 
 class Assets:
-    def __init__(self):
+    def __init__(self, media_root=None):
+        self.media_root = Path(media_root) if media_root else Path(__file__).parent / "media"
+
         # Normal images
         self.images = {}
 
@@ -26,9 +29,10 @@ class Assets:
 
     def image(self, name, alpha=True):
         """Load an image once and cache it."""
-        path = f"media/images/{name}.png"
+        path = self.media_root / "images" / f"{name}.png"
+        key = (name, alpha)
 
-        if name not in self.images:
+        if key not in self.images:
             image = pygame.image.load(path)
 
             if alpha:
@@ -36,9 +40,9 @@ class Assets:
             else:
                 image = image.convert()
 
-            self.images[name] = image
+            self.images[key] = image
 
-        return self.images[name]
+        return self.images[key]
 
     # --------------------------------------------------
     # Sounds
@@ -46,12 +50,13 @@ class Assets:
 
     def sound(self, name):
         """Load a sound once and cache it."""
-        path = f"media/sounds/{name}.png"
+        path = self.media_root / "sounds" / name
+        key = str(path)
 
-        if name not in self.sounds:
-            self.sounds[name] = pygame.mixer.Sound(path)
+        if key not in self.sounds:
+            self.sounds[key] = pygame.mixer.Sound(path)
 
-        return self.sounds[name]
+        return self.sounds[key]
 
     # --------------------------------------------------
     # Fonts
@@ -59,7 +64,7 @@ class Assets:
 
     def font(self, name, size):
         """Load a font once and cache it."""
-        path = f"media/fonts/{name}.ttf"
+        path = self.media_root / "fonts" / f"{name}.ttf"
 
         key = (name, size)
 
@@ -99,7 +104,7 @@ class Assets:
         flip_x:
             Flip every frame horizontally.
         """
-        path = f"media/sheets/{name}.png"
+        path = self.media_root / "sheets" / f"{name}.png"
 
         key = (
             name,
@@ -160,15 +165,11 @@ class Assets:
         output_size=(64, 64),
     ):
         """Get one cached texture from a regular atlas."""
-        atlas_path = f"media/atlases/{atlas_name}.png"
+        atlas_path = self.media_root / "atlases" / f"{atlas_name}.png"
 
-        if atlas_name not in self.atlas_textures:
-            self.atlas_textures[atlas_name] = {}
-
-        textures = self.atlas_textures[atlas_name]
-
-        if texture_id in textures:
-            return textures[texture_id]
+        key = (atlas_name, texture_id, tile_size, output_size)
+        if key in self.atlas_textures:
+            return self.atlas_textures[key]
 
         if atlas_name not in self.atlases:
             atlas = pygame.image.load(
@@ -193,7 +194,7 @@ class Assets:
         rows = height // tile_size
 
 
-        if texture_id >= columns * rows:
+        if texture_id < 0 or texture_id >= columns * rows:
             raise ValueError(
                 f"Texture '{texture_id}' is outside the atlas."
             )
@@ -216,7 +217,7 @@ class Assets:
                 output_size,
             )
 
-        textures[texture_id] = texture
+        self.atlas_textures[key] = texture
 
         return texture
 
