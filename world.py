@@ -31,47 +31,60 @@ class World:
         self.chunks = {}
         self.logger.info("Initialised world")
 
-    def add_block(self, grid_x, grid_y, block_type):
-        chunk_x = grid_x // self.CHUNK_SIZE
-        chunk_y = grid_y // self.CHUNK_SIZE
+    def _grid_to_chunk(self, grid_x, grid_y):
+        chunk_pos = (
+            grid_x // self.CHUNK_SIZE,
+            grid_y // self.CHUNK_SIZE,
+        )
+        local_pos = (
+            grid_x % self.CHUNK_SIZE,
+            grid_y % self.CHUNK_SIZE,
+        )
+        return chunk_pos, local_pos
 
-        chunk_pos = (chunk_x, chunk_y)
+    def _get_chunk_at(self, grid_x, grid_y):
+        chunk_pos, local_pos = self._grid_to_chunk(grid_x, grid_y)
+        return self.chunks.get(chunk_pos), local_pos
 
+    def _get_or_create_chunk(self, chunk_pos):
         if chunk_pos not in self.chunks:
-            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y, self.BLOCK_SIZE, self.logger)
+            chunk_x, chunk_y = chunk_pos
+            self.chunks[chunk_pos] = Chunk(
+                chunk_x,
+                chunk_y,
+                self.BLOCK_SIZE,
+                self.logger,
+            )
+        return self.chunks[chunk_pos]
 
-        chunk = self.chunks[chunk_pos]
+    def _get_or_create_chunk_at(self, grid_x, grid_y):
+        chunk_pos, local_pos = self._grid_to_chunk(grid_x, grid_y)
+        return self._get_or_create_chunk(chunk_pos), local_pos
 
-        local_x = grid_x % self.CHUNK_SIZE
-        local_y = grid_y % self.CHUNK_SIZE
+    def _get_block(self, grid_x, grid_y):
+        chunk, local_pos = self._get_chunk_at(grid_x, grid_y)
+        if chunk is None:
+            return None
+        return chunk.blocks.get(local_pos)
+
+    def add_block(self, grid_x, grid_y, block_type):
+        chunk, local_pos = self._get_or_create_chunk_at(grid_x, grid_y)
 
         neighbours = ((grid_x + 1, grid_y), (grid_x - 1, grid_y),
                       (grid_x, grid_y + 1), (grid_x, grid_y - 1))
         not_suspended = False
         for neighbour_x, neighbour_y in neighbours:
-            neighbour_chunk_pos = (
-                neighbour_x // self.CHUNK_SIZE,
-                neighbour_y // self.CHUNK_SIZE,
-            )
-            neighbour_chunk = self.chunks.get(neighbour_chunk_pos)
-            if neighbour_chunk is None:
-                continue
-
-            neighbour_pos = (
-                neighbour_x % self.CHUNK_SIZE,
-                neighbour_y % self.CHUNK_SIZE,
-            )
-            if isinstance(neighbour_chunk.blocks.get(neighbour_pos), Block):
+            if isinstance(self._get_block(neighbour_x, neighbour_y), Block):
                 not_suspended = True
                 break
         
-        if chunk.blocks.get((local_x, local_y)) is None and not_suspended:
+        if chunk.blocks.get(local_pos) is None and not_suspended:
             x = grid_x * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
             y = grid_y * self.BLOCK_SIZE + self.BLOCK_SIZE // 2
 
             block = Block((x, y), block_type, self.assets)
 
-            chunk.blocks[(local_x,local_y)] = block
+            chunk.blocks[local_pos] = block
             chunk.modified = True
             chunk.bake()
 
@@ -83,41 +96,24 @@ class World:
         return surface_y
 
     def delete_block(self, grid_x, grid_y):
-        chunk_x = grid_x // self.CHUNK_SIZE
-        chunk_y = grid_y // self.CHUNK_SIZE
-        
-        chunk_pos = (chunk_x, chunk_y)
-        
-        if chunk_pos not in self.chunks:
-            self.chunks[chunk_pos] = Chunk(chunk_x, chunk_y, self.BLOCK_SIZE, self.logger)
-        
-        chunk = self.chunks[chunk_pos]
-        
-        local_x = grid_x % self.CHUNK_SIZE
-        local_y = grid_y % self.CHUNK_SIZE
-        
-        chunk.blocks.pop((local_x,local_y),None)
+        chunk, local_pos = self._get_or_create_chunk_at(grid_x, grid_y)
+        chunk.blocks.pop(local_pos, None)
         chunk.modified = True
         chunk.bake()
 
     def erode_block(self, grid_x, grid_y, dt):
-        chunk_x = grid_x // self.CHUNK_SIZE
-        chunk_y = grid_y // self.CHUNK_SIZE
-        chunk = self.chunks.get((chunk_x, chunk_y))
-
+        chunk, local_pos = self._get_chunk_at(grid_x, grid_y)
         if chunk is None:
             return
 
-        local_x = grid_x % self.CHUNK_SIZE
-        local_y = grid_y % self.CHUNK_SIZE
-        block = chunk.blocks.get((local_x, local_y))
+        block = chunk.blocks.get(local_pos)
 
         if block is None:
             return
 
         state = block.erode(dt)
         if state == BreakState.DESTROYED:
-            chunk.blocks.pop((local_x, local_y))
+            chunk.blocks.pop(local_pos)
             chunk.modified = True
             chunk.bake()
             return
@@ -126,16 +122,7 @@ class World:
         return state
 
     def reset_block_integrity(self, grid_x, grid_y):
-        chunk_x = grid_x // self.CHUNK_SIZE
-        chunk_y = grid_y // self.CHUNK_SIZE
-        chunk = self.chunks.get((chunk_x, chunk_y))
-
-        if chunk is None:
-            return
-
-        local_x = grid_x % self.CHUNK_SIZE
-        local_y = grid_y % self.CHUNK_SIZE
-        block = chunk.blocks.get((local_x, local_y))
+        block = self._get_block(grid_x, grid_y)
 
         if block is not None:
             block.reset_integrity()
@@ -150,19 +137,12 @@ class World:
 
         for grid_y in range(top, bottom + 1):
             for grid_x in range(left, right + 1):
-
-                chunk_x = grid_x // self.CHUNK_SIZE
-                chunk_y = grid_y // self.CHUNK_SIZE
-
-                chunk = self.chunks.get((chunk_x, chunk_y))
+                chunk, local_pos = self._get_chunk_at(grid_x, grid_y)
 
                 if chunk is None:
                     continue
 
-                local_x = grid_x % self.CHUNK_SIZE
-                local_y = grid_y % self.CHUNK_SIZE
-
-                block = chunk.blocks.get((local_x, local_y))
+                block = chunk.blocks.get(local_pos)
 
                 if block is not None:
                     blocks.append(block)
@@ -172,8 +152,6 @@ class World:
     def draw(self, renderer, camera):
         self.generate_around(pygame.Rect(camera.x, camera.y, camera.width, camera.height))
         self.unload_far_chunks(camera, renderer)
-
-        screen_rect = pygame.Rect(camera.x, camera.y, camera.width, camera.height)
 
         left = int(camera.x // self.BLOCK_SIZE)
         right = int((camera.x + camera.width) // self.BLOCK_SIZE)
@@ -202,10 +180,6 @@ class World:
                     (chunk.x * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.x,
                      chunk.y * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.y),
                 )
-
-                #for block in chunk.blocks.values():
-                    #if block.rect.colliderect(screen_rect):
-                        #screen.blit(block.image,(block.rect.x - camera.x,block.rect.y - camera.y))
 
     def generate_chunk(self, chunk_x, chunk_y):
         chunk_pos = (chunk_x, chunk_y)
