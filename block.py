@@ -32,7 +32,18 @@ class Block(pygame.sprite.Sprite):
 
     def erode(self, dt):
         self.integrity -= dt / self.hardness
-        return self.integrity <= 0
+        if self.integrity <= 1e-9:
+            self.integrity = 0
+            return -1
+        if self.integrity == 1:
+            return 5
+        return 4 - int(self.integrity / 0.2)
+
+    def reset_integrity(self):
+        self.integrity = 1.0
+
+    def fetch_overlay(self):
+        return self.integrity * 5 - 1
 
     def update(self):
         pass

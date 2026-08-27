@@ -115,10 +115,28 @@ class World:
         if block is None:
             return
 
-        if block.erode(dt):
+        state = block.erode(dt)
+        if state == -1:
             chunk.blocks.pop((local_x, local_y))
             chunk.modified = True
             chunk.bake()
+            return
+        return state
+
+    def reset_block_integrity(self, grid_x, grid_y):
+        chunk_x = grid_x // self.CHUNK_SIZE
+        chunk_y = grid_y // self.CHUNK_SIZE
+        chunk = self.chunks.get((chunk_x, chunk_y))
+
+        if chunk is None:
+            return
+
+        local_x = grid_x % self.CHUNK_SIZE
+        local_y = grid_y % self.CHUNK_SIZE
+        block = chunk.blocks.get((local_x, local_y))
+
+        if block is not None:
+            block.reset_integrity()
 
     def get_nearby_blocks(self, rect):
         blocks = []
