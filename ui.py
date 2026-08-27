@@ -23,8 +23,6 @@ class Hotbar:
 			bar_width,
 			self.BAR_HEIGHT,
 		)
-		self.background = pygame.Surface(self.rect.size, pygame.SRCALPHA)
-		self.background.fill((20, 24, 28, 220))
 		self.icons = {
 			block_id: {
 				self.ICON_SIZE: pygame.transform.scale(
@@ -38,30 +36,48 @@ class Hotbar:
 			}
 			for block_id, preview_name in enumerate(self.PREVIEW_NAMES)
 		}
+		self.surface = None
+		self.selected_block = None
 
-	def draw(self, selected_block):
-		"""Draw every block slot, enlarging the currently selected block."""
-		self.renderer.draw_surface(self.background, self.rect)
+	def _create_surface(self, selected_block):
+		surface = pygame.Surface(self.rect.size, pygame.SRCALPHA)
+		surface.fill((20, 24, 28, 220))
+		slot_x = selected_block * self.SLOT_SIZE
+		selected_rect = pygame.Rect(
+			slot_x + (self.SLOT_SIZE - self.SELECTED_ICON_SIZE) // 2,
+			(self.BAR_HEIGHT - self.SELECTED_ICON_SIZE) // 2,
+			self.SELECTED_ICON_SIZE,
+			self.SELECTED_ICON_SIZE,
+		).inflate(self.SLOT_GAP, self.SLOT_GAP)
+		pygame.draw.rect(
+			surface,
+			(240, 220, 120, 255),
+			selected_rect,
+			width=3,
+		)
 
 		for block_id in range(self.BLOCK_COUNT):
-			is_selected = block_id == selected_block
 			icon_size = (
 				self.SELECTED_ICON_SIZE
-				if is_selected
+				if block_id == selected_block
 				else self.ICON_SIZE
 			)
 			icon = self.icons[block_id][icon_size]
-			slot_x = self.rect.x + block_id * self.SLOT_SIZE
+			slot_x = block_id * self.SLOT_SIZE
 			icon_rect = icon.get_rect(center=(
 				slot_x + self.SLOT_SIZE // 2,
-				self.rect.centery,
+				self.BAR_HEIGHT // 2,
 			))
+			surface.blit(icon, icon_rect)
 
-			if is_selected:
-				self.renderer.draw_rect(
-					icon_rect.inflate(self.SLOT_GAP, self.SLOT_GAP),
-					(240, 220, 120, 255),
-					width=3,
-					skeleton=True,
-				)
-			self.renderer.draw_surface(icon, icon_rect)
+		return surface
+
+	def draw(self, selected_block):
+		"""Draw the cached bar, rebuilding it only after selection changes."""
+		if selected_block != self.selected_block:
+			if self.surface is not None:
+				self.renderer.invalidate_surface(self.surface)
+			self.surface = self._create_surface(selected_block)
+			self.selected_block = selected_block
+
+		self.renderer.draw_surface(self.surface, self.rect)

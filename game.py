@@ -160,7 +160,7 @@ class Game:
             (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y),
         )
 
-        #self.hotbar.draw(self.selected_block)
+        self.hotbar.draw(self.selected_block)
         self.handle_addons()
         
 
