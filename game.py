@@ -31,6 +31,7 @@ class Game:
         self.zonal_blocks = []
         self.erode_target = None
         self.block_break_overlay = None
+        self.selected_block = BlockType.DIRT
 
         self.assets = assets
 
@@ -75,6 +76,13 @@ class Game:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return Event.QUIT_GAME
+                match event.key:
+                    case pygame.K_1: self.selected_block = BlockType.GRASS
+                    case pygame.K_2: self.selected_block = BlockType.DIRT
+                    case pygame.K_3: self.selected_block = BlockType.STONE
+                    case pygame.K_4: self.selected_block = BlockType.COAL
+                    case pygame.K_5: self.selected_block = BlockType.LOG
+                    case pygame.K_6: self.selected_block = BlockType.LEAF
         if mouse[0][0] or mouse[0][2]:
             self.world_pos = (mouse[1][0]+self.camera.x, mouse[1][1]+self.camera.y)
             if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(self.world_pos):
@@ -90,7 +98,7 @@ class Game:
                         self.BLOCK_SIZE,
                     )
                     if not block_rect.colliderect(self.player.sprite.hitbox):
-                        self.world.add_block(grid_x, grid_y, BlockType.LEAF)
+                        self.world.add_block(grid_x, grid_y, self.selected_block)
 
         if self.erode_target != previous_target:
             self.block_break_overlay = None
