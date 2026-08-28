@@ -55,6 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.jump_state = None
         self.direction = Direction.STATIC
         self.auto_jumping = False
+        self.benchmark_traversal = False
 
         self.diff = 0
 
@@ -191,6 +192,12 @@ class Player(pygame.sprite.Sprite):
             self.set_state(AerialState.PREPARING)
     
     def physics_play(self, dt, blocks):
+        if self.benchmark_traversal:
+            self.velocity.x = self.MAX_SPEED
+            self.velocity.y = 0
+            self.hitbox.x += self.velocity.x * dt
+            return
+
         if self.jump_state is AerialState.PREPARING:
             self.state_timer -= dt
 
