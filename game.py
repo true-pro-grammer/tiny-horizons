@@ -114,7 +114,7 @@ class Game:
                         self.BLOCK_SIZE,
                         self.BLOCK_SIZE,
                     )
-                    if not block_rect.colliderect(self.player.sprite.hitbox):
+                    if not block_rect.colliderect(self.player.sprite.hitbox) and self.inventory[self.selected_block] is not None:
                         self.world.add_block(grid_x, grid_y, self.inventory[self.selected_block])
 
         if self.erode_target != previous_target:
