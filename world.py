@@ -1,6 +1,7 @@
 import pygame
 from collections import deque
 from noise import pnoise1
+from time import perf_counter
 
 from block import Block, BlockType, BreakState
 from chunk import Chunk
@@ -34,6 +35,8 @@ class World:
         self.queued_chunks = set()
         self._blocks_revision = 0
         self._nearby_blocks_cache = None
+        self.benchmark_timing_enabled = False
+        self.benchmark_timings = {}
         self.logger.info("Initialised world")
 
     def _grid_to_chunk(self, grid_x, grid_y):
@@ -166,9 +169,19 @@ class World:
         return blocks
 
     def draw(self, renderer, camera):
+        if self.benchmark_timing_enabled:
+            self._benchmark_chunk_generation_time = 0.0
+            self._benchmark_chunk_baking_time = 0.0
+            world_started_at = perf_counter()
+            generation_started_at = perf_counter()
+
         self.generate_around(pygame.Rect(camera.x, camera.y, camera.width, camera.height))
         self.load_next_chunk()
         self.unload_far_chunks(camera, renderer)
+
+        if self.benchmark_timing_enabled:
+            generation_time = perf_counter() - generation_started_at
+            rendering_started_at = perf_counter()
 
         left = int(camera.x // self.BLOCK_SIZE)
         right = int((camera.x + camera.width) // self.BLOCK_SIZE)
@@ -198,7 +211,17 @@ class World:
                      chunk.y * self.CHUNK_SIZE * self.BLOCK_SIZE - camera.y),
                 )
 
+        if self.benchmark_timing_enabled:
+            self.benchmark_timings = {
+                "world_time": perf_counter() - world_started_at,
+                "world_generation_time": generation_time,
+                "chunk_generation_time": self._benchmark_chunk_generation_time,
+                "chunk_baking_time": self._benchmark_chunk_baking_time,
+                "world_render_time": perf_counter() - rendering_started_at,
+            }
+
     def generate_chunk(self, chunk_x, chunk_y):
+        generation_started_at = perf_counter() if self.benchmark_timing_enabled else None
         chunk_pos = (chunk_x, chunk_y)
 
         if chunk_pos in self.chunks:
@@ -235,7 +258,16 @@ class World:
                 )
 
                 self.chunks[chunk_pos].blocks[(local_x, local_y)] = block
+        baking_started_at = perf_counter() if self.benchmark_timing_enabled else None
         self.chunks[chunk_pos].bake()
+        self._benchmark_chunk_baking_time = (
+            perf_counter() - baking_started_at
+            if self.benchmark_timing_enabled else 0.0
+        )
+        self._benchmark_chunk_generation_time = (
+            perf_counter() - generation_started_at
+            if self.benchmark_timing_enabled else 0.0
+        )
         self._blocks_revision += 1
 
     def generate_around(self, rect):

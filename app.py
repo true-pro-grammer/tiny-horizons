@@ -22,8 +22,12 @@ class App:
     WIDTH = 1920
     HEIGHT = 1080
     FRAME_STATS_UPDATE_INTERVAL = 0.25
+    BENCHMARK_WARMUP_FRAMES = 300
+    BENCHMARK_FRAMES = 2000
+    BENCHMARK_FIXED_DT = 1 / 60
 
-    def __init__(self):
+    def __init__(self, benchmark=False):
+        self.benchmark = benchmark
         self.started_at = perf_counter()
         pygame.init()
         self.screen = pygame.display.set_mode(
@@ -33,7 +37,7 @@ class App:
         )
         self.renderer = Renderer(self.WIDTH, self.HEIGHT)
         pygame.display.set_caption(self.NAME)
-        self.state = AppState.START
+        self.state = AppState.PLAY if benchmark else AppState.START
 
         self.font = pygame.font.Font(None, 30)
         self.last_frame_started_at = perf_counter()
@@ -45,6 +49,8 @@ class App:
         self.logger = Logger()
         self.assets = Assets()
         self.game = Game(self.renderer, self.logger, self.WIDTH, self.HEIGHT, self.assets)
+        if benchmark:
+            self.game.world.benchmark_timing_enabled = True
         self.start_menu = StartMenu(self.renderer, self.WIDTH, self.HEIGHT, self.assets)
         self.pause_menu = PauseMenu(self.renderer, self.WIDTH, self.HEIGHT, self.assets)
         self.running = True
@@ -113,6 +119,9 @@ class App:
         pygame.quit()
 
     def run(self):
+        if self.benchmark:
+            return self.run_benchmark()
+
         try:
             while self.running:
                 events = pygame.event.get()
@@ -128,3 +137,51 @@ class App:
         finally:
             if not self.logger.dmp.closed:
                 self.terminate()
+
+    def run_benchmark(self):
+        fixed_dt = self.BENCHMARK_FIXED_DT
+        keys = tuple(False for _ in range(512))
+        mouse = ((False, False, False), (0, 0))
+        warmup_records = []
+        frame_records = []
+
+        try:
+            for frame_number in range(self.BENCHMARK_WARMUP_FRAMES):
+                pygame.event.pump()
+                frame_started_at = perf_counter()
+                self.game.tick(fixed_dt, keys, mouse, [])
+                self.renderer.present()
+                warmup_records.append({
+                    "frame": frame_number + 1,
+                    "frame_time": perf_counter() - frame_started_at,
+                    **self.game.world.benchmark_timings,
+                })
+
+            for frame_number in range(self.BENCHMARK_FRAMES):
+                pygame.event.pump()
+                frame_started_at = perf_counter()
+                self.game.tick(fixed_dt, keys, mouse, [])
+                self.renderer.present()
+                frame_time = perf_counter() - frame_started_at
+                frame_records.append({
+                    "frame": frame_number + 1,
+                    "frame_time": frame_time,
+                    **self.game.world.benchmark_timings,
+                })
+        except Exception as exception:
+            self.terminate(exception)
+            raise
+        finally:
+            if not self.logger.dmp.closed:
+                self.terminate()
+
+        return {
+            "warmup_frames": self.BENCHMARK_WARMUP_FRAMES,
+            "measured_frames": self.BENCHMARK_FRAMES,
+            "width": self.WIDTH,
+            "height": self.HEIGHT,
+            "simulation_dt": fixed_dt,
+            "world_seed": self.game.world.SEED,
+            "warmup": warmup_records,
+            "frames": frame_records,
+        }

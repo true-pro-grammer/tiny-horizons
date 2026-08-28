@@ -4,3 +4,4 @@ __pycache__/
 logs/
 media/atlases/block_components.png
 generate_cube.py
+benchmarks/
