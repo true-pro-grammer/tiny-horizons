@@ -4,7 +4,7 @@ from enum import Enum, auto
 from time import perf_counter
 
 from game import Game
-from menu import StartMenu
+from menu import StartMenu, PauseMenu
 from utils import Event
 from logger import Logger
 from assets import Assets
@@ -15,6 +15,7 @@ from renderer import Renderer
 class AppState(Enum):
     START = auto()
     PLAY = auto()
+    PAUSE = auto()
 
 class App:
     NAME = "Bloop's Saga"
@@ -45,6 +46,7 @@ class App:
         self.assets = Assets()
         self.game = Game(self.renderer, self.logger, self.WIDTH, self.HEIGHT, self.assets)
         self.start_menu = StartMenu(self.renderer, self.WIDTH, self.HEIGHT, self.assets)
+        self.pause_menu = PauseMenu(self.renderer, self.WIDTH, self.HEIGHT, self.assets)
         self.running = True
 
     def tick(self, events, keys, mouse):
@@ -61,6 +63,10 @@ class App:
                 report = self.game.tick(dt, keys, mouse, events)
             case AppState.START:
                 report = self.start_menu.tick(mouse, events)
+            case AppState.PAUSE:
+                zero_keys = tuple(False for _ in range(512))
+                self.game.tick(0, zero_keys, mouse, [])
+                report = self.pause_menu.tick(mouse, events)
 
         match report:
             case Event.QUIT_GAME:
@@ -69,6 +75,8 @@ class App:
                 self.state = AppState.PLAY
             case Event.TERMINATE:
                 self.running = False
+            case Event.PAUSE_GAME:
+                self.state = AppState.PAUSE
 
         if (
             self.frame_stats_surface is None

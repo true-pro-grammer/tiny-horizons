@@ -12,6 +12,11 @@ class Menu:
 
         self.buttons = []
 
+        self.overlay = None
+        if self.bg_colour[3] < 255:
+            self.overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            self.overlay.fill(self.bg_colour)
+
     def new_button(self, size, *, position=None, relative_to=None, anchor="center", other_anchor="center", offset=(0,0), colour, hover_colour, event=None):
         if (position is None) == (relative_to is None):
             raise ValueError("Exactly one of position or relative_to must be provided")
@@ -45,7 +50,10 @@ class Menu:
     def tick(self, mouse, events):
         report = self.poll(events)
 
-        self.renderer.begin_frame(self.bg_colour)
+        if self.overlay:
+            self.renderer.draw_surface(self.overlay, (0, 0))
+        else:
+            self.renderer.begin_frame(self.bg_colour)
 
         mouse_pos = mouse[1]
 
@@ -76,4 +84,27 @@ class StartMenu(Menu):
             colour="purple",
             hover_colour="pink",
             event=Event.TERMINATE
+        )
+
+class PauseMenu(Menu):
+    def __init__(self, renderer, width, height, assets):
+        super().__init__(renderer, width, height, assets, (50, 50, 50, 100))
+
+        self.resume_button = self.new_button(
+            (200,75),
+            position=(self.width//2, self.height//2),
+            colour="orange",
+            hover_colour="yellow",
+            event=Event.START_GAME
+        )
+
+        self.menu_button = self.new_button(
+            (200,75),
+            relative_to=self.resume_button,
+            anchor="midtop",
+            other_anchor="midbottom",
+            offset=(0, 30),
+            colour="purple",
+            hover_colour="pink",
+            event=Event.QUIT_GAME
         )

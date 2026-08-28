@@ -90,7 +90,7 @@ class Game:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    return Event.QUIT_GAME
+                    return Event.PAUSE_GAME
                 match event.key:
                     case pygame.K_1: self.selected_block = 0
                     case pygame.K_2: self.selected_block = 1

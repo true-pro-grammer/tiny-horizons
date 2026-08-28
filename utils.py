@@ -4,6 +4,7 @@ class Event(Flag):
     START_GAME = auto()
     QUIT_GAME = auto()
     TERMINATE = auto()
+    PAUSE_GAME = auto()
 
 def split_evenly(s: str, parts: int) -> list[str]:
     if parts <= 0:
