@@ -44,7 +44,7 @@ class Block(pygame.sprite.Sprite):
         if self.integrity <= 1e-9:
             self.integrity = 0
             return BreakState.DESTROYED
-        return 4 - int(self.integrity / 0.2)
+        return 4 - int(self.integrity / 0.2 + 1e-9)
 
     def reset_integrity(self):
         self.integrity = 1.0
