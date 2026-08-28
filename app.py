@@ -60,7 +60,7 @@ class App:
             case AppState.PLAY:
                 report = self.game.tick(dt, keys, mouse, events)
             case AppState.START:
-                report = self.start_menu.tick(dt, mouse, events)
+                report = self.start_menu.tick(mouse, events)
 
         match report:
             case Event.QUIT_GAME:

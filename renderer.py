@@ -24,7 +24,7 @@ class Renderer:
     :meth:`invalidate_surface` after changing a cached surface's pixels.
     """
 
-    def __init__(self, width, height, clear_color=(0.529, 0.808, 0.922, 1.0)):
+    def __init__(self, width, height, clear_color=(135, 206, 235, 255)):
         self.width = width
         self.height = height
         self.clear_color = clear_color
@@ -51,13 +51,10 @@ class Renderer:
     def begin_frame(self, clear_color=None):
         """Clear the back buffer before issuing draw calls."""
         color = clear_color or self.clear_color
-        glClearColor(*color)
+        red, green, blue, opacity = pygame.Color(color)
+        glClearColor(red / 255, green / 255, blue / 255, opacity / 255)
         glClear(GL_COLOR_BUFFER_BIT)
         glLoadIdentity()
-
-    def clear(self, red, green, blue, alpha=1.0):
-        """Compatibility shorthand for clearing to an RGBA colour."""
-        self.begin_frame((red, green, blue, alpha))
 
     def texture_for(self, surface):
         """Return the OpenGL texture ID for a Pygame surface."""
@@ -123,8 +120,7 @@ class Renderer:
         if self._texture_enabled:
             glDisable(GL_TEXTURE_2D)
             self._texture_enabled = False
-        red, green, blue, *alpha = pygame.Color(color)
-        opacity = alpha[0] if alpha else 255
+        red, green, blue, opacity = pygame.Color(color)
         glColor4f(red / 255, green / 255, blue / 255, opacity / 255)
         glLineWidth(width)
         if skeleton: glBegin(GL_LINE_LOOP)
