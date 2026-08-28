@@ -28,10 +28,10 @@ class Assets:
     # Images
     # --------------------------------------------------
 
-    def image(self, name, alpha=True):
+    def image(self, name, alpha=True, output_size=None):
         """Load an image once and cache it."""
         path = self.media_root / "images" / f"{name}.png"
-        key = (name, alpha)
+        key = (name, alpha, output_size)
 
         if key not in self.images:
             image = pygame.image.load(path)
@@ -40,6 +40,9 @@ class Assets:
                 image = image.convert_alpha()
             else:
                 image = image.convert()
+
+            if output_size is not None:
+                image = pygame.transform.scale(image, output_size)
 
             self.images[key] = image
 

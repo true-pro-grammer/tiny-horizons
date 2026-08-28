@@ -16,6 +16,8 @@ class DebugMode(Flag):
     SHOW_PLACE_RESTRICTION = auto()
     HIDE_VIGNETTE = auto()
 
+#inventory 0-7 inc
+
 class Game:
     BLOCK_SIZE = 64
     CHUNK_SIZE = 16
@@ -28,11 +30,22 @@ class Game:
         self.height = height
         self.debug = DebugMode.HIDE_VIGNETTE
 
+        self.inventory = [
+            BlockType.GRASS,
+            BlockType.DIRT,
+            BlockType.STONE,
+            BlockType.COAL,
+            BlockType.LOG,
+            BlockType.LEAF,
+            None,
+            None,
+        ]
+
         self.accumulator = 0
         self.zonal_blocks = []
         self.erode_target = None
         self.block_break_overlay = None
-        self.selected_block = BlockType.DIRT
+        self.selected_block = 0
 
         self.assets = assets
 
@@ -79,12 +92,14 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     return Event.QUIT_GAME
                 match event.key:
-                    case pygame.K_1: self.selected_block = BlockType.GRASS
-                    case pygame.K_2: self.selected_block = BlockType.DIRT
-                    case pygame.K_3: self.selected_block = BlockType.STONE
-                    case pygame.K_4: self.selected_block = BlockType.COAL
-                    case pygame.K_5: self.selected_block = BlockType.LOG
-                    case pygame.K_6: self.selected_block = BlockType.LEAF
+                    case pygame.K_1: self.selected_block = 0
+                    case pygame.K_2: self.selected_block = 1
+                    case pygame.K_3: self.selected_block = 2
+                    case pygame.K_4: self.selected_block = 3
+                    case pygame.K_5: self.selected_block = 4
+                    case pygame.K_6: self.selected_block = 5
+                    case pygame.K_7: self.selected_block = 6
+                    case pygame.K_8: self.selected_block = 7
         if mouse[0][0] or mouse[0][2]:
             self.world_pos = (mouse[1][0]+self.camera.x, mouse[1][1]+self.camera.y)
             if self.player.sprite.rect.inflate(*self.MAX_REACH).collidepoint(self.world_pos):
@@ -100,7 +115,7 @@ class Game:
                         self.BLOCK_SIZE,
                     )
                     if not block_rect.colliderect(self.player.sprite.hitbox):
-                        self.world.add_block(grid_x, grid_y, self.selected_block)
+                        self.world.add_block(grid_x, grid_y, self.inventory[self.selected_block])
 
         if self.erode_target != previous_target:
             self.block_break_overlay = None
@@ -160,7 +175,7 @@ class Game:
             (self.player.sprite.rect.x-self.camera.x, self.player.sprite.rect.y-self.camera.y),
         )
 
-        self.hotbar.draw(self.selected_block)
+        self.hotbar.draw(self.selected_block, self.inventory)
         self.handle_addons()
         
 
