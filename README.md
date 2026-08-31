@@ -65,7 +65,7 @@ If you wish to contribute, run `python -m pip install -e .` to install in editab
 
 Now the program files and dependencies will be installed. You can run the game with `python main.py`.
 
-To leave the virtual environment, you will have to run `deactivate`. Note that to run the game again you will have to first enter the venv again with either `source .venv/bin/activate` or `.venv\Scripts\activate` depending on your operating system. This is described in the previous step.
+To leave the virtual environment, you will have to run `deactivate`. Note that to run the game again you will have to first enter the venv again with the appropriate activation script from [the previous step](#2-set-up-virtual-environment). For example, **fish** users would run `source .venv/bin/activate.fish`
 
 ## 🤝 Credits
 
