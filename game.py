@@ -63,7 +63,7 @@ class Game:
         self.world = World(self.assets, self.logger, self.BLOCK_SIZE, self.CHUNK_SIZE)
 
         self.player = pygame.sprite.GroupSingle()
-        self.player.add(Player((960, 540), self.assets, self.logger))
+        self.player.add(Player((self.width//2, self.height//2), self.assets, self.logger))
         self.player.sprite.teleport((0, -50))
 
     def draw_vignette(self):

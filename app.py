@@ -20,8 +20,6 @@ class AppState(Enum):
 
 class App:
     NAME = "Bloop's Saga"
-    WIDTH = 1920
-    HEIGHT = 1080
     FRAME_STATS_UPDATE_INTERVAL = 0.25
     BENCHMARK_WARMUP_FRAMES = 300
     BENCHMARK_FRAMES = 2000
@@ -33,6 +31,9 @@ class App:
         self.benchmark_scenario = benchmark_scenario
         self.started_at = perf_counter()
         pygame.init()
+        display_info = pygame.display.Info()
+        self.WIDTH = display_info.current_w
+        self.HEIGHT = display_info.current_h
         self.screen = pygame.display.set_mode(
             (self.WIDTH, self.HEIGHT),
             pygame.FULLSCREEN | pygame.OPENGL | pygame.DOUBLEBUF,
