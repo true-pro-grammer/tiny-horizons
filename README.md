@@ -23,7 +23,7 @@ Tiny Horizons is a small 2D tile-based sandbox game inspired by Terraria, built 
 
 ## 🛠️ Installation and Usage
 
-If you want to run the project locally, I recommend using Python 3.12. Dependencies are automatically handled, so don't worry about pre-installing them. Run the following:
+If you want to run the project locally, I recommend using **Python 3.12**. Python dependencies are automatically handled, so don't worry about pre-installing them. Run the following:
 
 ### 1. Clone the repository
 
@@ -41,6 +41,8 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 ```
 
+> 🛈 `activate` only works on POSIX-compatible shells such as **bash** and **zsh**. If you use **fish**, use `source .venv/bin/activate.fish` and if you use **csh** or **tcsh**, use `source .venv/bin/activate.csh`
+
 #### Windows (Command Prompt)
 
 ```bash
@@ -48,9 +50,18 @@ py -3.12 -m venv .venv
 .venv\Scripts\activate
 ```
 
+#### Windows (PowerShell)
+
+```bash
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
 ### 3. Usage
 
 If you wish to contribute, run `python -m pip install -e .` to install in editable mode, otherwise run `python -m pip install .`
+
+> 🛈 You will need a C compiler to compile the `noise` package. You may already have this, but if prompted, install **Build Tools for Visual Studio** with the **Desktop development with C++ workload** (Windows). On Linux, install your distribution's standard development tools, such as `build-essential` on Debian/Ubuntu. On macOS, install **Xcode Command Line Tools**.
 
 Now the program files and dependencies will be installed. You can run the game with `python main.py`.
 
