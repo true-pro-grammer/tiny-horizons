@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiny-horizons"
+version = "0.1.0"
+description = "A small Terraria style tile-based game built with Pygame and PyOpenGL."
+readme = "README.md"
+requires-python = ">=3.8,<3.14"
+dependencies = [
+  "pygame>=2.6.1",
+  "PyOpenGL>=3.1.10",
+  "PyOpenGL_accelerate",
+  "numpy>=1.26",
+  "noise @ git+https://github.com/caseman/noise.git",
+]
+
+[tool.setuptools]
+py-modules = [
+  "main",
+  "app",
+  "assets",
+  "benchmark",
+  "block",
+  "camera",
+  "chunk",
+  "game",
+  "logger",
+  "menu",
+  "player",
+  "renderer",
+  "ui",
+  "utils",
+  "world",
+]
+
+[tool.setuptools.package-dir]
+"" = "."

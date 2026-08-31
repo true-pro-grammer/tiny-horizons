@@ -34,8 +34,14 @@ class Renderer:
         self._texture_enabled = False
 
         self.resize(width, height)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDisable(GL_BLEND)
+
+    @staticmethod
+    def _surface_has_alpha(surface):
+        """Return whether a surface needs alpha blending when drawn."""
+        if surface.get_alpha() is not None:
+            return True
+        return bool(surface.get_flags() & pygame.SRCALPHA)
 
     def resize(self, width, height):
         """Use a top-left-origin pixel coordinate system."""
@@ -100,6 +106,13 @@ class Renderer:
         if not self._texture_enabled:
             glEnable(GL_TEXTURE_2D)
             self._texture_enabled = True
+
+        if self._surface_has_alpha(surface):
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        else:
+            glDisable(GL_BLEND)
+
         glBindTexture(GL_TEXTURE_2D, texture)
         glColor4f(1, 1, 1, 1)
         glBegin(GL_QUADS)
@@ -121,6 +134,11 @@ class Renderer:
             glDisable(GL_TEXTURE_2D)
             self._texture_enabled = False
         red, green, blue, opacity = pygame.Color(color)
+        if opacity < 255:
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        else:
+            glDisable(GL_BLEND)
         glColor4f(red / 255, green / 255, blue / 255, opacity / 255)
         glLineWidth(width)
         if skeleton: glBegin(GL_LINE_LOOP)

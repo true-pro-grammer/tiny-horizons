@@ -33,7 +33,10 @@ class Block(pygame.sprite.Sprite):
 
         self.pos = pygame.Vector2(pos)
         self.size = (block_size, block_size)
-        self.image = assets.atlas_texture("blocks", block_id)
+        if block_id is BlockType.LEAF:
+            self.image = assets.atlas_texture("blocks", block_id, alpha=True)
+        else:
+            self.image = assets.atlas_texture("blocks", block_id)
         self.rect = self.image.get_rect(center=self.pos)
         self.hardness = HARDNESS_LOOKUP[block_id]
 

@@ -169,18 +169,22 @@ class Assets:
         texture_id,
         tile_size=16,
         output_size=(64, 64),
+        alpha=False
     ):
         """Get one cached texture from a regular atlas."""
         atlas_path = self.media_root / "atlases" / f"{atlas_name}.png"
 
-        key = (atlas_name, texture_id, tile_size, output_size)
-        if key in self.atlas_textures:
-            return self.atlas_textures[key]
+        atlas_key = (atlas_name, alpha)
+        texture_key = (atlas_name, texture_id, tile_size, output_size, alpha)
 
-        if atlas_name not in self.atlases:
-            atlas = pygame.image.load(
-                atlas_path
-            ).convert_alpha()
+        if texture_key in self.atlas_textures:
+            return self.atlas_textures[texture_key]
+
+        if atlas_key not in self.atlases:
+            if alpha:
+                atlas = pygame.image.load(atlas_path).convert_alpha()
+            else:
+                atlas = pygame.image.load(atlas_path).convert()
 
             width, height = atlas.get_size()
 
@@ -190,9 +194,9 @@ class Assets:
                     f"be divisible by {tile_size}."
                 )
 
-            self.atlases[atlas_name] = atlas
+            self.atlases[atlas_key] = atlas
 
-        atlas = self.atlases[atlas_name]
+        atlas = self.atlases[atlas_key]
 
         width, height = atlas.get_size()
 
@@ -223,7 +227,7 @@ class Assets:
                 output_size,
             )
 
-        self.atlas_textures[key] = texture
+        self.atlas_textures[texture_key] = texture
 
         return texture
 

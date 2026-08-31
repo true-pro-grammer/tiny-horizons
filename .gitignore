@@ -5,3 +5,5 @@ logs/
 media/atlases/block_components.png
 generate_cube.py
 benchmarks/
+*.egg-info/
+.venv/

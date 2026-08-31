@@ -165,7 +165,7 @@ class Game:
         self.world.draw(self.renderer, self.camera)
 
         if self.block_break_overlay is not None and self.erode_target is not None:
-            tex = self.assets.atlas_texture("smash", self.block_break_overlay)
+            tex = self.assets.atlas_texture("smash", self.block_break_overlay, alpha=True)
             overlay_x = self.erode_target[0] * self.BLOCK_SIZE - self.camera.x
             overlay_y = self.erode_target[1] * self.BLOCK_SIZE - self.camera.y
             self.renderer.draw_surface(tex, (overlay_x, overlay_y))
